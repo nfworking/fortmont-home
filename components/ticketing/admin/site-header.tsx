@@ -1,8 +1,8 @@
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
-import { ThemeToggle } from "@/components/theme-toggle"
-import { NotificationPanel } from "@/temp_move/components/common/notificationUi"
+import { ThemeToggle } from "@/components/common/theme-toggle"
+import { NotificationPanel } from "@/components/common/notificationUi"
 
 type SiteHeaderProps = {
   title?: string

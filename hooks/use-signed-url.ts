@@ -9,7 +9,7 @@ export function useSignedUrl(fileId: string, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
     setLoading(true);
-    fetch(`/api/storage/download?fileId=${encodeURIComponent(fileId)}`)
+    fetch(`${process.env.API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`)
       .then((r) => r.json())
       .then((d) => setUrl(d.downloadUrl ?? d.url ?? null))
       .finally(() => setLoading(false));

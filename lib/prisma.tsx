@@ -12,7 +12,7 @@ export const prisma =
       host: "172.20.0.15",
       user: "admin",
       password: "StrongPassword",
-      database: "fortmontapi",
+      database: "fortmont_home",
       allowPublicKeyRetrieval: true,
     }),
   });

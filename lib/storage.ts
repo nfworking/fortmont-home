@@ -46,7 +46,7 @@ async function parseJson<T>(res: Response): Promise<T> {
   return data as T;
 }
 export async function fetchAccount(): Promise<AccountResponse> {
-  const res = await fetch("/api/users", {
+  const res = await fetch(`${process.env.API_HOST}/api/users`, {
     method: "GET",
     credentials: "include",
   });
@@ -69,7 +69,7 @@ export async function uploadFile(
 ): Promise<{ fileId: string }> {
   // Step 1 — request a presigned upload URL.
   onStage?.("requesting");
-  const uploadUrlRes = await fetch("/api/storage/upload-url", {
+  const uploadUrlRes = await fetch(`${process.env.API_HOST}/api/storage/upload-url`, {
     method: "POST",
     headers: jsonHeaders,
     credentials: "include",
@@ -98,7 +98,7 @@ export async function uploadFile(
 
   // Step 3 — finalize the upload.
   onStage?.("finalizing");
-  const completeRes = await fetch("/api/storage/complete-upload", {
+  const completeRes = await fetch(`${process.env.API_HOST}/api/storage/complete-upload`, {
     method: "POST",
     headers: jsonHeaders,
     credentials: "include",
@@ -110,7 +110,7 @@ export async function uploadFile(
 
 export async function getDownloadUrl(fileId: string): Promise<string> {
   const res = await fetch(
-    `/api/storage/download-url?fileId=${encodeURIComponent(fileId)}`,
+    `${process.env.API_HOST}/api/storage/download-url?fileId=${encodeURIComponent(fileId)}`,
     { credentials: "include" },
   );
   const data = await parseJson<{ downloadUrl?: string; url?: string }>(res);

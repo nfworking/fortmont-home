@@ -52,7 +52,7 @@ type SortKey = "name" | "size";
 
 export async function getDownloadUrl(fileId: string): Promise<string> {
   const res = await fetch(
-    `/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
+    `${process.env.API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
     { credentials: "include" },
   );
   const data = await res.json();
@@ -84,7 +84,7 @@ async function handleDownload(file: StorageFile) {
  
 const deleteFile = async (fileId: string) => {
 
-  await fetch(`/api/storage/delete/file/${fileId}`, {
+  await fetch(`${process.env.API_HOST}/api/storage/delete/file/${fileId}`, {
     method: "DELETE",
     credentials: "include",
   }).then((res) => {

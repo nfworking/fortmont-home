@@ -1,7 +1,6 @@
 "use client"
 import { RefreshCw } from "lucide-react"
 
-import * as React from "react"
 import { Email, FolderType } from "./mail"
 import { getEmailContact, extractName, formatDate, getEmailSnippet } from "./formatters"
 import { cn } from "@/lib/utils"

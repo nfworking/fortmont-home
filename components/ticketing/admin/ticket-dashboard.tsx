@@ -24,25 +24,12 @@ function normalizeStatus(status: Ticket['status']) {
   return (status ?? 'open').toLowerCase();
 }
 
-function statusLabel(status: string) {
-  return status
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
+
 
 function displayName(user: User | null | undefined, fallback: string) {
   return user?.displayName ?? user?.email ?? fallback;
 }
 
-function initials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function calculateStats(tickets: Ticket[]) {
   return {
@@ -132,7 +119,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     const connect = () => {
       if (cancelled) return;
 
-      eventSource = new EventSource(`/api/ticketing/stream/tickets/${selectedTicketId}/stream`);
+      eventSource = new EventSource(`${process.env.API_HOST}/api/ticketing/stream/tickets/${selectedTicketId}/stream`);
 
       eventSource.onopen = () => {
         attempt = 0;
@@ -240,7 +227,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     if (!silent) setIsLoading(true);
 
     try {
-      const res = await fetch(`/api/ticketing/get/ticket?refresh=${Date.now()}`, {
+      const res = await fetch(`${process.env.API_HOST}/api/ticketing/get/ticket?refresh=${Date.now()}`, {
         cache: 'no-store',
         credentials: 'include',
         headers: { 
@@ -291,7 +278,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     setTicketRows(nextRows.filter((row) => normalizeStatus(row.status) !== 'closed'));
 
     try {
-      const res = await fetch(`/api/ticketing/patch/ticket/${ticket.id}`, {
+      const res = await fetch(`${process.env.API_HOST}/api/ticketing/patch/ticket/${ticket.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -315,7 +302,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     setIsSubmittingComment(true);
 
     try {
-      const res = await fetch(`/api/ticketing/post/ticket/${ticket.id}/comments`, {
+      const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket/${ticket.id}/comments`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -351,7 +338,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     setIsCreatingTicket(true);
 
     try {
-      const res = await fetch('/api/ticketing/post/ticket', {
+      const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
