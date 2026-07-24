@@ -23,7 +23,7 @@ export function AccountSection() {
     }
     try {
       const res = await fetch(
-        "/api/users",
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/users`,
         withBearerToken({ method: "DELETE" }, session?.accessToken),
       );
       if (res.ok) {
@@ -42,7 +42,7 @@ export function AccountSection() {
   const handleExport = async () => {
     try {
       const res = await fetch(
-        "/api/users/export",
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/users/export`,
         withBearerToken({ method: "GET" }, session?.accessToken),
       );
       if (!res.ok) {

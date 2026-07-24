@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import React from "react";
 
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { withBearerToken } from "@/lib/fetch-auth";
 import Link from "next/link";
 
 import { AccountSettingsSidebar } from "@/components/account/Accountsettingssidebar";
@@ -22,6 +22,7 @@ import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Layout, ArrowUpRightFromSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoAvailableToEntraUsers } from "@/components/account/NoAvaiabletoEntraUsers";
+import type { AccountUser } from "@/components/account/types";
 
 export const metadata: Metadata = {
   title: "Fortmont · Account",
@@ -82,6 +83,99 @@ interface PageProps {
   searchParams: Promise<{ section?: string | string[] }>;
 }
 
+type ApiUsersResponse = {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  email: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  isEntraUser: boolean;
+  phone: string | null;
+  mailboxes?: {
+    id: string;
+    email: string;
+    isPrimary: boolean;
+    provider?: string | null;
+  }[];
+  deviceTokens?: {
+    id: string;
+    platform: string | null;
+    createdAt?: string;
+    deviceVersion?: string | null;
+    deviceName: string | null;
+    deviceModelName: string | null;
+    deviceBrand: string | null;
+  }[];
+  teams?: {
+    name: string;
+    description: string | null;
+  }[];
+  githubLink?: {
+    username: string;
+    profileUrl: string | null;
+    avatarUrl: string | null;
+    scope: string | null;
+    linkedAt: string;
+  }[];
+  sessions?: {
+    lastActive: string;
+  }[];
+  storage?: {
+    quotaBytes: number;
+    usedBytes: number;
+  } | null;
+};
+
+function toAccountUser(apiUser: ApiUsersResponse): AccountUser {
+  const lastActive = apiUser.sessions
+    ?.map((session) => new Date(session.lastActive))
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+
+  return {
+    id: apiUser.id,
+    username: apiUser.username,
+    displayName: apiUser.displayName,
+    email: apiUser.email,
+    role: null,
+    avatarUrl: apiUser.githubLink?.[0]?.avatarUrl ?? null,
+    phone: apiUser.phone,
+    isEntraUser: apiUser.isEntraUser,
+    isActive: apiUser.isActive,
+    createdAt: new Date(apiUser.createdAt),
+    updatedAt: new Date(apiUser.updatedAt),
+    lastLoggedIn: lastActive ?? null,
+    mailboxes: (apiUser.mailboxes ?? []).map((mailbox) => ({
+      id: mailbox.id,
+      email: mailbox.email,
+      isPrimary: mailbox.isPrimary,
+      provider: mailbox.provider ?? "Exchange",
+    })),
+    deviceTokens: (apiUser.deviceTokens ?? []).map((device) => ({
+      id: device.id,
+      platform: device.platform,
+      deviceName: device.deviceName,
+      deviceModelName: device.deviceModelName,
+      deviceBrand: device.deviceBrand,
+    })),
+    teams: apiUser.teams ?? [],
+    githubLink: (apiUser.githubLink ?? []).map((link) => ({
+      username: link.username,
+      profileUrl: link.profileUrl,
+      avatarUrl: link.avatarUrl,
+      scope: link.scope,
+      linkedAt: new Date(link.linkedAt),
+    })),
+    storage: apiUser.storage
+      ? {
+          quotaBytes: BigInt(apiUser.storage.quotaBytes),
+          usedBytes: BigInt(apiUser.storage.usedBytes),
+        }
+      : null,
+  };
+}
+
 export default async function AccountPage({
   searchParams,
 }: PageProps): Promise<React.ReactElement> {
@@ -103,28 +197,34 @@ export default async function AccountPage({
     sessionId?: string | null;
   };
 
-  const userId = (sessionUser.id ?? sessionUser.sub)?.trim();
-  const email = sessionUser.email?.trim().toLowerCase();
+  const apiBase = process.env.NEXT_PUBLIC_API_HOST?.replace(/\/$/, "") ?? "";
+  const usersUrl = `${apiBase}/api/users`;
+  const accessToken = (session as { accessToken?: string | null }).accessToken;
 
-  const user = {
-    id: userId || "mock-id",
-    username: "mockuser",
-    displayName: "Mock User",
-    email: email || "mock@example.com",
-    role: "admin",
-    avatarUrl: null,
-    phone: null,
-    isEntraUser: false,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastLoggedIn: new Date(),
-    mailboxes: [],
-    deviceTokens: [],
-    teams: [],
-    githubLink: [],
-    storage: { quotaBytes: 1000000000n, usedBytes: 500000n },
-  };
+  let user: AccountUser | null = null;
+
+  try {
+    const res = await fetch(usersUrl, {
+      method: "GET",
+      cache: "no-store",
+      ...withBearerToken(
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+        accessToken ?? undefined,
+      ),
+    });
+
+    if (res.ok) {
+      const payload = (await res.json()) as ApiUsersResponse;
+      user = toAccountUser(payload);
+    } else {
+      console.error("Failed to fetch /api/users:", res.status, res.statusText);
+    }
+  } catch (err) {
+    console.error("Error fetching /api/users:", err);
+  }
+
 
   const activeSection = resolveSection(resolvedSearchParams.section);
   const initials = getInitials(
@@ -156,7 +256,7 @@ export default async function AccountPage({
       case "devices":
         return <DevicesSection deviceTokens={user?.deviceTokens ?? []} />;
       case "github":
-        return <GitHubSection githubLink={user?.githubLink} />;
+        return <GitHubSection githubLink={user?.githubLink ?? []} />;
       case "storage":
         return <StorageSection storage={user?.storage} />;
       case "storage-acc":

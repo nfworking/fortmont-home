@@ -63,7 +63,7 @@ export default function SecuritySection() {
     setIsTwoFactorBusy(true);
 
     try {
-      const response = await fetch("/api/account/2fa", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/account/2fa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,7 +103,7 @@ export default function SecuritySection() {
     setIsTwoFactorBusy(true);
 
     try {
-      const response = await fetch("/api/account/2fa", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/account/2fa`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -143,7 +143,7 @@ export default function SecuritySection() {
     setIsTwoFactorBusy(true);
 
     try {
-      const response = await fetch("/api/account/2fa", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/account/2fa`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -200,7 +200,7 @@ export default function SecuritySection() {
 
 
 
-  const response = await fetch("/api/account/update-password", {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/account/update-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

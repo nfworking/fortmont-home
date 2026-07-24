@@ -54,7 +54,7 @@ export function GitHubSection({ githubLink }: GitHubSectionProps) {
 
   const handleUnlink = async () => {
     try {
-      const res = await fetch("/api/github/disconnect", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/github/disconnect`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         ...withBearerToken(undefined, session?.accessToken),
@@ -135,7 +135,7 @@ export function GitHubSection({ githubLink }: GitHubSectionProps) {
                 </p>
               </div>
               <Button size="sm" className="mt-1 gap-1.5" asChild>
-                <a href="/api/github/connect">
+                <a href={`${process.env.NEXT_PUBLIC_API_HOST}/api/github/connect`}>
                   <LinkIcon className="h-3.5 w-3.5" />
                   Connect GitHub
                 </a>

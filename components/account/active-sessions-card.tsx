@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Laptop, Smartphone, Globe, Trash2, Loader2, ShieldAlert } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { withBearerToken } from "@/lib/fetch-auth";
+import { usePathname, useSearchParams } from 'next/navigation';
 
 interface SessionData {
   id: string;
@@ -68,10 +70,12 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokingOthers, setRevokingOthers] = useState(false);
-
+  const session = useSession();
   const fetchSessions = async () => {
     try {
-      const res = await fetch("/api/auth/sessions");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/auth/sessions`, {
+        ...withBearerToken(undefined, session.data?.accessToken),
+      });
       if (!res.ok) throw new Error("Failed to fetch sessions");
       const data = await res.json();
       setSessions(data);
@@ -98,8 +102,9 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
 
     setRevokingId(sessionToken);
     try {
-      const res = await fetch(`/api/auth/sessions?sessionId=${sessionToken}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/auth/sessions?sessionId=${sessionToken}`, {
         method: "DELETE",
+        ...withBearerToken(undefined, session.data?.accessToken),
       });
       if (!res.ok) throw new Error("Failed to revoke session");
       
@@ -123,8 +128,9 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
     
     setRevokingOthers(true);
     try {
-      const res = await fetch("/api/auth/sessions?revokeOthers=true", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/auth/sessions?revokeOthers=true`, {
         method: "DELETE",
+        ...withBearerToken(undefined, session.data?.accessToken),
       });
       if (!res.ok) throw new Error("Failed to revoke other sessions");
 
@@ -191,6 +197,9 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
             {sessions.map((session, index) => {
               const { browser, os, isMobile } = parseUserAgent(session.userAgent);
               const isCurrent = session.sessionToken === currentSessionId;
+              const isThirdPartyConnection =
+  window.location.hostname.endsWith('fortmont.me') &&
+  window.location.hostname !== 'api.fortmont.me';
               const isRevoking = revokingId === session.sessionToken;
 
               return (
@@ -210,11 +219,14 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
                         <span className="font-semibold text-sm text-foreground truncate">
                           {browser} on {os}
                         </span>
-                        {isCurrent && (
-                          <Badge variant="default" className="text-[10px] py-0 px-1.5 h-4 font-normal bg-primary/20 text-primary border-primary/20">
-                            This device
-                          </Badge>
-                        )}
+                        {isThirdPartyConnection && (
+  <Badge
+    variant="default"
+    className="text-[10px] py-0 px-1.5 h-4 font-normal bg-primary/20 text-primary border-primary/20"
+  >
+    Third party connection
+  </Badge>
+)}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                         <span>{session.ipAddress || "Unknown IP"}</span>

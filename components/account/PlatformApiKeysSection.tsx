@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { SettingsSection } from "@/components/account/Settingssection";
 import { Copy, Plus, Trash2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import { withBearerToken } from "@/lib/fetch-auth";
+import { headers } from "next/dist/server/request/headers";
 
 type PlatformApiKey = {
   id: string;
@@ -49,12 +52,17 @@ export function PlatformApiKeysSection() {
   const [creating, setCreating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
 
+  const session = useSession();
+
   const visibleKeys = useMemo(() => keys, [keys]);
 
   const loadKeys = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/platform/account/keys");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/platform/account/keys`, {
+        headers: { "Content-Type": "application/json" },
+        ...withBearerToken(undefined, session.data?.accessToken),
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -89,9 +97,10 @@ export function PlatformApiKeysSection() {
     setGeneratedKey(null);
 
     try {
-      const response = await fetch("/api/platform/account/keys", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/platform/account/keys`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        ...withBearerToken(undefined, session.data?.accessToken),
         body: JSON.stringify({
           name,
           scopes: selectedScopes,
@@ -122,8 +131,9 @@ export function PlatformApiKeysSection() {
     }
 
     try {
-      const response = await fetch(`/api/platform/account/keys/${keyId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/platform/account/keys/${keyId}`, {
         method: "DELETE",
+        ...withBearerToken(undefined, session.data?.accessToken),
       });
 
       const data = await response.json();
