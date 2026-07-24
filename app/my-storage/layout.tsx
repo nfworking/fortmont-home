@@ -1,10 +1,16 @@
-// app/page.tsx
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { fetchAccount } from "@/lib/storage";
 import { AppShell } from "@/components/storage/app-shell";
 import { FileBrowser } from "@/components/storage/file-browser";
+
+type StorageSession = {
+  user?: {
+    id?: string | null;
+    sessionId?: string | null;
+  } | null;
+  accessToken?: string;
+} | null;
 
 export const metadata: Metadata = {
   title: "Files — Vault",
@@ -16,50 +22,20 @@ export const metadata: Metadata = {
 };
 
 export default async function FilesPage() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
-
-  let files: {
-    id: string;
-    name: string;
-    size: number;
-    bucket: string;
-    objectKey: string;
-    owner: { id: string; username: string };
-  }[] = [];
-  let error: Error | null = null;
-
-  try {
-    const user = {
-      files: [
-        {
-          id: "mock-file-1",
-          name: "document.pdf",
-          size: 500000n,
-          bucket: "default",
-          objectKey: "mock-file-1",
-          owner: { id: session.user.id, username: "MockUser" }
-        }
-      ]
-    };
-
-    files = (user?.files ?? []).map((f) => ({
-      ...f,
-      size: Number(f.size),
-    }));
-  } catch (e) {
-    error = e instanceof Error ? e : new Error("Failed to fetch files");
-  }
+  const session = (await auth()) as StorageSession;
+  const account = session?.user?.id
+    ? await fetchAccount(session.accessToken).catch((error) => {
+        console.error("Error fetching storage account:", error);
+        return null;
+      })
+    : null;
 
   return (
-    <AppShell title="Files">
+    <AppShell title="Files" account={account}>
       <FileBrowser
-        files={files}
+        files={account?.files ?? []}
         isLoading={false}
-        error={error}
+        error={null}
       />
     </AppShell>
   );

@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
 
   allowedDevOrigins: [
-    "172.20.0.30"
+    "172.20.0.30", "home.fortmont.me"
   ],
 };
 

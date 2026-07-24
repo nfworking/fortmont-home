@@ -54,7 +54,7 @@ type SortKey = "name" | "size";
 
 export async function getDownloadUrl(fileId: string, accessToken?: string): Promise<string> {
   const res = await fetch(
-    `${process.env.API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
+    `${process.env.NEXT_PUBLIC_API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
     withBearerToken(undefined, accessToken),
   );
   const data = await res.json();
@@ -86,7 +86,7 @@ async function handleDownload(file: StorageFile, accessToken?: string) {
  
 const deleteFile = async (fileId: string, accessToken?: string) => {
 
-  await fetch(`${process.env.API_HOST}/api/storage/delete/file/${fileId}`, {
+  await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/storage/delete/file/${fileId}`, {
     method: "DELETE",
     ...withBearerToken(undefined, accessToken),
   }).then((res) => {

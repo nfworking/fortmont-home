@@ -11,15 +11,45 @@ export function useSignedUrl(fileId: string, enabled = true) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!enabled) return;
-    setLoading(true);
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+
+      if (!enabled) {
+        setLoading(false);
+        setUrl(null);
+        return;
+      }
+
+      setLoading(true);
+    });
+
+    if (!enabled) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
     fetch(
-      `${process.env.API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
+      `${process.env.NEXT_PUBLIC_API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
       withBearerToken(undefined, session?.accessToken),
     )
       .then((r) => r.json())
-      .then((d) => setUrl(d.downloadUrl ?? d.url ?? null))
-      .finally(() => setLoading(false));
+      .then((d) => {
+        if (!cancelled) {
+          setUrl(d.downloadUrl ?? d.url ?? null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [fileId, enabled, session?.accessToken]);
 
   return { url, loading };

@@ -5,32 +5,35 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar } from "@/components/storage/app-sidebar";
 import { UploadDialog } from "@/components/storage/upload-dialog";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { fetchAccount, type AccountResponse } from "@/lib/storage";
 
 export async function AppShell({
   title,
   children,
+  account,
 }: {
   title: string;
   children: ReactNode;
+  account?: AccountResponse | null;
 }) {
   const session = await auth();
+  const resolvedAccount =
+    account ??
+    (session?.user?.id
+      ? await fetchAccount(session.accessToken).catch(() => null)
+      : null);
 
-  const account = session?.user?.id
-    ? {
-        id: session.user.id,
-        username: "mockuser",
-        displayName: "Mock User",
-        email: session.user.email ?? "mock@example.com",
-        avatarUrl: null,
-        storage: { usedBytes: 500000n, quotaBytes: 1000000000n },
-      }
-    : null;
+  const usedBytes = resolvedAccount?.files.reduce((total, file) => total + Number(file.size || 0), 0) ?? 0;
+  const quotaBytes = Number(resolvedAccount?.storageLimit ?? 0);
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar account={account} usedBytes={Number(account?.storage?.usedBytes || 0)} quotaBytes={Number(account?.storage?.quotaBytes || 0)} />
+        <AppSidebar
+          account={resolvedAccount}
+          usedBytes={usedBytes}
+          quotaBytes={quotaBytes}
+        />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur">
             <SidebarTrigger className="-ml-1" />

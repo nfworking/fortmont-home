@@ -1,3 +1,5 @@
+import { withBearerToken } from "@/lib/fetch-auth";
+
 export interface FileOwner {
   id: string;
   username: string;
@@ -27,20 +29,43 @@ export interface AccountResponse extends SessionUser {
   storageLimit?: number | null;
 }
 
-const jsonHeaders = { "Content-Type": "application/json" } as const;
+type RawAccountResponse = SessionUser & {
+  files?: unknown;
+  storageLimit?: number | string | bigint | null;
+  quotaBytes?: number | string | bigint | null;
+  storage?: {
+    quotaBytes?: number | string | bigint | null;
+    usedBytes?: number | string | bigint | null;
+  } | null;
+};
 
-function withBearerToken(init: RequestInit | undefined, accessToken?: string): RequestInit {
-  const headers = new Headers(init?.headers ?? undefined);
-
-  if (accessToken) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
+function toNumberOrNull(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
   }
 
-  return {
-    ...init,
-    headers,
-  };
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
 }
+
+function normalizeQuotaBytes(data: RawAccountResponse): number | null {
+  return (
+    toNumberOrNull(data.storageLimit) ??
+    toNumberOrNull(data.quotaBytes) ??
+    toNumberOrNull(data.storage?.quotaBytes) ??
+    null
+  );
+}
+
+const jsonHeaders = { "Content-Type": "application/json" } as const;
 
 async function parseJson<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -59,16 +84,18 @@ async function parseJson<T>(res: Response): Promise<T> {
   return data as T;
 }
 export async function fetchAccount(accessToken?: string): Promise<AccountResponse> {
-  const res = await fetch(`${process.env.API_HOST}/api/users`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/users`, {
     method: "GET",
     ...withBearerToken(undefined, accessToken),
   });
 
-  const data = await parseJson<AccountResponse>(res);
+  const data = await parseJson<RawAccountResponse>(res);
+  const storageLimit = normalizeQuotaBytes(data);
 
   return {
     ...data,
     files: Array.isArray(data.files) ? data.files : [],
+    storageLimit,
   };
 }
 

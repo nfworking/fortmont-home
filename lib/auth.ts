@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 
-import NextAuth, { type NextAuthConfig } from "next-auth";
+import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import type { Provider } from "next-auth/providers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
@@ -313,14 +313,8 @@ const nextAuth = NextAuth((request) => {
 
 export const { handlers, signIn, signOut } = nextAuth;
 
-type FortmontSession = {
-  user?: {
-    sessionId?: string | null;
-  } | null;
-} | null;
-
-export async function auth(...args: unknown[]) {
-  const authHandler = nextAuth.auth as (...callArgs: unknown[]) => Promise<FortmontSession>;
+export async function auth(...args: unknown[]): Promise<Session | null> {
+  const authHandler = nextAuth.auth as (...callArgs: unknown[]) => Promise<Session | null>;
   const session = await authHandler(...args);
 
   if (session?.user?.sessionId) {
