@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { AccountSettingsForm } from "@/components/account-settings-form";
+import { AccountSettingsForm } from "@/components/account/account-settings-form";
 import { DetailRow, SettingsSection } from "@/components/account/Settingssection";
 import { Upload } from "lucide-react";
 import type { AccountUser } from "./types";

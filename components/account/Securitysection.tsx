@@ -8,9 +8,10 @@ import { SettingsSection } from "@/components/account/Settingssection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KeyRound, Mail, ShieldAlert, ShieldCheck, Smartphone } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 
 import { toast } from "sonner";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 type TwoFactorStatus = {
   enabled: boolean;
@@ -23,6 +24,7 @@ type TwoFactorStatus = {
 };
 
 export default function SecuritySection() {
+  const { data: session } = useSession();
   const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus | null>(null);
   const [twoFactorPassword, setTwoFactorPassword] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
@@ -34,7 +36,7 @@ export default function SecuritySection() {
 
   const fetchTwoFactorStatus = useCallback(async () => {
     const response = await fetch("/api/account/2fa", {
-      credentials: "include",
+      ...withBearerToken(undefined, session?.accessToken),
     });
 
     if (!response.ok) return;
@@ -66,7 +68,7 @@ export default function SecuritySection() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({
           currentPassword: twoFactorPassword,
           method,
@@ -106,7 +108,7 @@ export default function SecuritySection() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({
           code: twoFactorCode,
           method: twoFactorSetupMethod,
@@ -146,7 +148,7 @@ export default function SecuritySection() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({
           currentPassword: twoFactorPassword,
         }),
@@ -203,7 +205,7 @@ export default function SecuritySection() {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
+    ...withBearerToken(undefined, session?.accessToken),
     body: JSON.stringify({
       currentPassword,
       newPassword,

@@ -3,6 +3,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import {
   GitCommit, GitFork, Star, Users, Calendar, BookOpen,
   Code2, RefreshCw, AlertCircle, CheckCircle2, Loader2,
@@ -19,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DashboardPage } from "@/components/dashboard/page-shell";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -74,8 +76,11 @@ const LANG_COLORS: Record<string, string> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function proxyFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${process.env.API_HOST}/api/github/proxy/${path}`);
+async function proxyFetch<T>(path: string, accessToken?: string): Promise<T> {
+  const res = await fetch(
+    `${process.env.API_HOST}/api/github/proxy/${path}`,
+    withBearerToken(undefined, accessToken),
+  );
   if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
   return res.json();
 }
@@ -127,6 +132,7 @@ function StatCardSkeleton() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function GitHubDashboardPage() {
+  const { data: session } = useSession();
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [commitData, setCommitData] = useState<CommitDay[]>([]);
@@ -144,8 +150,8 @@ export default function GitHubDashboardPage() {
     setError(null);
     try {
       const [ghUser, ghRepos] = await Promise.all([
-        proxyFetch<GitHubUser>("user"),
-        proxyFetch<GitHubRepo[]>("user/repos?per_page=100&sort=pushed&affiliation=owner"),
+        proxyFetch<GitHubUser>("user", session?.accessToken),
+        proxyFetch<GitHubRepo[]>("user/repos?per_page=100&sort=pushed&affiliation=owner", session?.accessToken),
       ]);
 
       setUser(ghUser);
@@ -214,7 +220,7 @@ export default function GitHubDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   useEffect(() => { load(); }, [load]);
 

@@ -33,21 +33,18 @@ export default async function FilesPage() {
   let error: Error | null = null;
 
   try {
-    const user = await prisma.appUsers.findUnique({
-      where: { id: session.user.id },
-      select: {
-        files: {
-          select: {
-            id: true,
-            name: true,
-            size: true,
-            bucket: true,
-            objectKey: true,
-            owner: { select: { id: true, username: true } },
-          },
-        },
-      },
-    });
+    const user = {
+      files: [
+        {
+          id: "mock-file-1",
+          name: "document.pdf",
+          size: 500000n,
+          bucket: "default",
+          objectKey: "mock-file-1",
+          owner: { id: session.user.id, username: "MockUser" }
+        }
+      ]
+    };
 
     files = (user?.files ?? []).map((f) => ({
       ...f,

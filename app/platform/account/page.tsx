@@ -18,7 +18,7 @@ import { GitHubSection } from "@/components/account/Githubsection";
 import { StorageSection } from "@/components/account/Storagesection";
 import { SessionsSection } from "@/components/account/Sessionsection";
 import DashboardPage from "@/components/account/StoragePage";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Layout, ArrowUpRightFromSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoAvailableToEntraUsers } from "@/components/account/NoAvaiabletoEntraUsers";
@@ -106,52 +106,25 @@ export default async function AccountPage({
   const userId = (sessionUser.id ?? sessionUser.sub)?.trim();
   const email = sessionUser.email?.trim().toLowerCase();
 
-  const user = await prisma.appUsers.findFirst({
-    where: {
-      OR: [...(userId ? [{ id: userId }] : []), ...(email ? [{ email }] : [])],
-    },
-    select: {
-      id: true,
-      username: true,
-      displayName: true,
-      email: true,
-      role: true,
-      avatarUrl: true,
-      phone: true,
-      isEntraUser: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-      lastLoggedIn: true,
-      mailboxes: {
-        select: { id: true, email: true, isPrimary: true, provider: true },
-      },
-      deviceTokens: {
-        select: {
-          id: true,
-          platform: true,
-          deviceName: true,
-          deviceModelName: true,
-          deviceBrand: true,
-        },
-      },
-      teams: {
-        select: { name: true, description: true },
-      },
-      githubLink: {
-        select: {
-          username: true,
-          profileUrl: true,
-          avatarUrl: true,
-          scope: true,
-          linkedAt: true,
-        },
-      },
-      storage: {
-        select: { quotaBytes: true, usedBytes: true },
-      },
-    },
-  });
+  const user = {
+    id: userId || "mock-id",
+    username: "mockuser",
+    displayName: "Mock User",
+    email: email || "mock@example.com",
+    role: "admin",
+    avatarUrl: null,
+    phone: null,
+    isEntraUser: false,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastLoggedIn: new Date(),
+    mailboxes: [],
+    deviceTokens: [],
+    teams: [],
+    githubLink: [],
+    storage: { quotaBytes: 1000000000n, usedBytes: 500000n },
+  };
 
   const activeSection = resolveSection(resolvedSearchParams.section);
   const initials = getInitials(

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSession } from "next-auth/react"
 import {
   ArrowUpAZ,
   Bell,
@@ -26,6 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { withBearerToken } from "@/lib/fetch-auth"
 
 // ---------- Types ----------
 
@@ -43,11 +45,11 @@ interface ApiNotification {
 // userId is dropped — it's always the logged-in user, nothing to render with it
 type Notification = Omit<ApiNotification, "userId">
 
-const NOTIFICATIONS_ENDPOINT = `${process.env.API_HOST}/api/notifications/get`
+const NOTIFICATIONS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_HOST}/api/notifications/get`
 const POLL_INTERVAL_MS = 2000
 
 function getPatchEndpoint(notificationId: string) {
-  return `${process.env.API_HOST}/api/notifications/patch/${notificationId}`
+  return `${process.env.NEXT_PUBLIC_API_HOST}/api/notifications/patch/${notificationId}`
 }
 
 // ---------- Helpers ----------
@@ -189,6 +191,7 @@ function NotificationItem({
 // ---------- Main component ----------
 
 export function NotificationPanel() {
+  const { data: session } = useSession()
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [hasError, setHasError] = React.useState(false)
@@ -200,7 +203,7 @@ export function NotificationPanel() {
  const fetchNotifications = React.useCallback(async () => {
     try {
       const res = await fetch(NOTIFICATIONS_ENDPOINT, {
-        credentials: "include",
+        ...withBearerToken(undefined, session?.accessToken),
       });
 
       // Explicitly type the incoming API response data here
@@ -243,8 +246,8 @@ export function NotificationPanel() {
     try {
       const res = await fetch(getPatchEndpoint(id), {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({ read: true }),
       })
 

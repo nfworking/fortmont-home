@@ -230,7 +230,7 @@ interface EntraUser {
 }
 
 function EntraUsers() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<EntraUser[]>(`${process.env.API_HOST}/api/entra`, { resource: "users" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<EntraUser[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "users" });
   const users = Array.isArray(data) ? data : [];
   const enabled = users.filter(u => u.accountEnabled).length;
   const guests = users.filter(u => u.userType === "Guest").length;
@@ -292,7 +292,7 @@ interface EntraGroup {
 }
 
   function EntraGroups() {
-    const { data, loading, error, lastFetched, refresh } = useApiData<EntraGroup[]>(`${process.env.API_HOST}/api/entra`, { resource: "groups" });
+    const { data, loading, error, lastFetched, refresh } = useApiData<EntraGroup[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "groups" });
   const groups = Array.isArray(data) ? data : [];
   const security = groups.filter(g => g.securityEnabled).length;
   const m365 = groups.filter(g => g.groupTypes?.includes("Unified")).length;
@@ -349,7 +349,7 @@ interface EntraDevice {
 }
 
 function EntraDevices() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<EntraDevice[]>(`${process.env.API_HOST}/api/entra`, { resource: "devices" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<EntraDevice[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "devices" });
   const devices = Array.isArray(data) ? data : [];
   const compliant = devices.filter(d => d.isCompliant).length;
   const managed = devices.filter(d => d.isManaged).length;
@@ -407,7 +407,7 @@ interface EntraApp {
 }
 
 function EntraApps() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<EntraApp[]>(`${process.env.API_HOST}/api/entra`, { resource: "applications" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<EntraApp[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "applications" });
   const apps = Array.isArray(data) ? data : [];
   const withCreds = apps.filter(a => (a.passwordCredentials?.length ?? 0) + (a.keyCredentials?.length ?? 0) > 0).length;
   const expiringSoon = apps.filter(a => {
@@ -474,7 +474,7 @@ interface SignInLog {
 }
 
 function EntraSignInLogs() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<SignInLog[]>(`${process.env.API_HOST}/api/entra`, { resource: "auditLogs/signIns", top: 50 });
+  const { data, loading, error, lastFetched, refresh } = useApiData<SignInLog[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "auditLogs/signIns", top: 50 });
   const logs = Array.isArray(data) ? data : [];
   const failures = logs.filter(l => l.status?.errorCode !== 0).length;
   const mfaCount = logs.filter(l => l.authenticationRequirement === "multiFactorAuthentication").length;
@@ -536,7 +536,7 @@ interface ConditionalAccessPolicy {
 }
 
 function EntraConditionalAccess() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<ConditionalAccessPolicy[]>(`${process.env.API_HOST}/api/entra`, { resource: "identity/conditionalAccess/policies" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<ConditionalAccessPolicy[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "identity/conditionalAccess/policies" });
   const policies = Array.isArray(data) ? data : [];
   const enforced = policies.filter(p => p.state === "enabled").length;
   const reportOnly = policies.filter(p => p.state === "enabledForReportingButNotEnforced").length;
@@ -598,7 +598,7 @@ interface AzureSubscription {
 }
 
 function AzureSubscriptions() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<AzureSubscription[]>(`${process.env.API_HOST}/api/azure`, { resource: "subscriptions" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<AzureSubscription[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/azure`, { resource: "subscriptions" });
   const subs = Array.isArray(data) ? data : [];
   const enabled = subs.filter(s => s.state === "Enabled").length;
 
@@ -646,7 +646,7 @@ interface AzureResourceGroup {
 }
 
 function AzureResourceGroups() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<AzureResourceGroup[]>(`${process.env.API_HOST}/api/azure`, { resource: "resourceGroups" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<AzureResourceGroup[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/azure`, { resource: "resourceGroups" });
   const groups = Array.isArray(data) ? data : [];
   const regions = [...new Set(groups.map(g => g.location).filter((loc): loc is string => !!loc))];
 
@@ -713,7 +713,7 @@ interface AzureVM {
 }
 
 function AzureVMs() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<AzureVM[]>(`${process.env.API_HOST}/api/azure`, { resource: "virtualMachines" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<AzureVM[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/azure`, { resource: "virtualMachines" });
   const vms = Array.isArray(data) ? data : [];
   const running = vms.filter(v => {
     const state = v.powerState ?? v.properties?.instanceView?.statuses?.find(s => s.code?.startsWith("PowerState/"))?.displayStatus ?? "";
@@ -776,7 +776,7 @@ interface AzureStorageAccount {
 }
 
 function AzureStorage() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<AzureStorageAccount[]>(`${process.env.API_HOST}/api/azure`, { resource: "storageAccounts" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<AzureStorageAccount[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/azure`, { resource: "storageAccounts" });
   const accounts = Array.isArray(data) ? data : [];
   const httpsOnly = accounts.filter(a => a.properties?.supportsHttpsTrafficOnly).length;
 
@@ -833,7 +833,7 @@ interface AzureRoleAssignment {
 }
 
 function AzureRoles() {
-  const { data, loading, error, lastFetched, refresh } = useApiData<AzureRoleAssignment[]>(`${process.env.API_HOST}/api/azure`, { resource: "roleAssignments" });
+  const { data, loading, error, lastFetched, refresh } = useApiData<AzureRoleAssignment[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/azure`, { resource: "roleAssignments" });
   const roles = Array.isArray(data) ? data : [];
   const uniqueRoles = new Set(roles.map(r => ((r.properties ?? r) as AzureRoleAssignmentProps).roleDefinitionId?.split("/").pop())).size;
 

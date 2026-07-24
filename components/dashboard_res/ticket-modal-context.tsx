@@ -1,47 +1,58 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { CreateTicketDialog, CreateTicketFormState } from "@/components/ticketing/admin/create-ticket"
-import { User } from "@/components/ticketing/admin/ticket"
+import * as React from "react";
+import { useSession } from "next-auth/react";
+
+import { CreateTicketDialog, CreateTicketFormState } from "@/components/ticketing/admin/create-ticket";
+import type { User } from "@/components/ticketing/admin/ticket";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 interface TicketModalContextType {
-  openTicketModal: () => void // No longer need to pass users down manually
-  closeTicketModal: () => void
+  openTicketModal: () => void;
+  closeTicketModal: () => void;
 }
 
-const TicketModalContext = React.createContext<TicketModalContextType | undefined>(undefined)
+const TicketModalContext = React.createContext<TicketModalContextType | undefined>(undefined);
 
 export function TicketModalProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false)
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [users, setUsers] = React.useState<User[]>([])
+  const { data: session } = useSession();
+  const [open, setOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [users, setUsers] = React.useState<User[]>([]);
 
-  // Fetch users from Prisma via the API route when the provider mounts
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`${process.env.API_HOST}/api/ticketing/get/users`)
+        const res = await fetch(
+          `${process.env.API_HOST ?? ""}/api/ticketing/get/users`,
+          withBearerToken(undefined, session?.accessToken),
+        );
+
         if (res.ok) {
-          const data = await res.json()
-          setUsers(data)
+          const data = await res.json();
+          setUsers(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error("Error loading Prisma appUsers into context:", error)
+        console.error("Error loading Prisma appUsers into context:", error);
       }
-    }
+    };
 
-    fetchUsers()
-  }, [])
+    void fetchUsers();
+  }, [session?.accessToken]);
 
-  const openTicketModal = () => setOpen(true)
-  const closeTicketModal = () => setOpen(false)
+  const openTicketModal = () => setOpen(true);
+  const closeTicketModal = () => setOpen(false);
 
   const handleGlobalSubmit = async (form: CreateTicketFormState) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
+
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket`, {
+      const res = await fetch(`${process.env.API_HOST ?? ""}/api/ticketing/post/ticket`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
+        },
         body: JSON.stringify({
           type: form.type,
           department: form.department,
@@ -52,35 +63,37 @@ export function TicketModalProvider({ children }: { children: React.ReactNode })
           createdById: form.createdById === "unassigned" ? null : form.createdById,
           assignedToId: form.assignedToId === "unassigned" ? null : form.assignedToId,
         }),
-      })
+      });
 
-      if (!res.ok) throw new Error(`Create failed with ${res.status}`)
-      
-      setOpen(false)
+      if (!res.ok) {
+        throw new Error(`Create failed with ${res.status}`);
+      }
+
+      setOpen(false);
     } catch (error) {
-      console.error("Global ticket creation failed:", error)
-      throw error
+      console.error("Global ticket creation failed:", error);
+      throw error;
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <TicketModalContext.Provider value={{ openTicketModal, closeTicketModal }}>
       {children}
       <CreateTicketDialog
         open={open}
-        users={users} // Fed directly from our Prisma API hook
+        users={users}
         isSubmitting={isSubmitting}
         onOpenChange={setOpen}
         onSubmit={handleGlobalSubmit}
       />
     </TicketModalContext.Provider>
-  )
+  );
 }
 
 export function useTicketModal() {
-  const context = React.useContext(TicketModalContext)
-  if (!context) throw new Error("useTicketModal must be used within a TicketModalProvider")
-  return context
+  const context = React.useContext(TicketModalContext);
+  if (!context) throw new Error("useTicketModal must be used within a TicketModalProvider");
+  return context;
 }

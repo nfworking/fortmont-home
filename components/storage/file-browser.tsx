@@ -44,16 +44,18 @@ import {
   isImage,
 } from "@/lib/storage";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {VideoPlayerDialog} from "./video-player";
 import { PhotoViewerDialog } from "./photo-viewer";
 import { useSignedUrl } from "@/hooks/use-signed-url";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 type SortKey = "name" | "size";
 
-export async function getDownloadUrl(fileId: string): Promise<string> {
+export async function getDownloadUrl(fileId: string, accessToken?: string): Promise<string> {
   const res = await fetch(
     `${process.env.API_HOST}/api/storage/download?fileId=${encodeURIComponent(fileId)}`,
-    { credentials: "include" },
+    withBearerToken(undefined, accessToken),
   );
   const data = await res.json();
   const url = data.downloadUrl ?? data.url;
@@ -61,8 +63,8 @@ export async function getDownloadUrl(fileId: string): Promise<string> {
   return url;
 }
 
-export async function downloadFile(file: StorageFile): Promise<void> {
-  const url = await getDownloadUrl(file.id);
+export async function downloadFile(file: StorageFile, accessToken?: string): Promise<void> {
+  const url = await getDownloadUrl(file.id, accessToken);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = file.name;
@@ -72,9 +74,9 @@ export async function downloadFile(file: StorageFile): Promise<void> {
   anchor.remove();
 }
 
-async function handleDownload(file: StorageFile) {
+async function handleDownload(file: StorageFile, accessToken?: string) {
   try {
-    await downloadFile(file);
+    await downloadFile(file, accessToken);
   } catch (error) {
     toast.error("Download failed", {
       description: error instanceof Error ? error.message : "Unexpected error",
@@ -82,11 +84,11 @@ async function handleDownload(file: StorageFile) {
   }
 }
  
-const deleteFile = async (fileId: string) => {
+const deleteFile = async (fileId: string, accessToken?: string) => {
 
   await fetch(`${process.env.API_HOST}/api/storage/delete/file/${fileId}`, {
     method: "DELETE",
-    credentials: "include",
+    ...withBearerToken(undefined, accessToken),
   }).then((res) => {
     if (!res.ok) {
       throw new Error("Failed to delete file");
@@ -102,8 +104,9 @@ const deleteFile = async (fileId: string) => {
 
 function FileActions({ file }: { file: StorageFile }) {
     const router = useRouter();
+  const { data: session } = useSession();
     const handleDelete = async (fileId: string) => {
-    await deleteFile(fileId);
+  await deleteFile(fileId, session?.accessToken);
  
   
   router.refresh(); 
@@ -119,7 +122,7 @@ function FileActions({ file }: { file: StorageFile }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleDownload(file)}>
+        <DropdownMenuItem onClick={() => handleDownload(file, session?.accessToken)}>
           <Download className="h-4 w-4" />
           Download
         </DropdownMenuItem>
@@ -185,6 +188,7 @@ function FileCard({ file }: { file: StorageFile }) {
 }
 
 function FileRow({ file }: { file: StorageFile }) {
+  const { data: session } = useSession();
   return (
     <div className="group flex items-center gap-3 border-b px-3 py-2.5 last:border-b-0 hover:bg-accent/50">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-secondary">
@@ -205,7 +209,7 @@ function FileRow({ file }: { file: StorageFile }) {
         variant="ghost"
         size="icon"
         className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
-        onClick={() => handleDownload(file)}
+        onClick={() => handleDownload(file, session?.accessToken)}
       >
         <Download className="h-4 w-4" />
         <span className="sr-only">Download</span>

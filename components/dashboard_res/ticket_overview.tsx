@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -25,6 +26,7 @@ import {
   UserRound,
   AlertTriangle,
 } from "lucide-react";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 interface TicketOverviewCardProps {
   title?: string;
@@ -42,6 +44,7 @@ export function TicketOverviewCard({
   className,
   href = "/admin_ticketing/dashboard",
 }: TicketOverviewCardProps) {
+  const { data: session } = useSession();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +52,9 @@ export function TicketOverviewCard({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/ticketing/get/ticket`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/get/ticket`, {
         cache: "no-store",
-        credentials: "include",
+        ...withBearerToken(undefined, session?.accessToken),
       });
 
       if (!res.ok) {
@@ -69,7 +72,7 @@ export function TicketOverviewCard({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   useEffect(() => {
     load();

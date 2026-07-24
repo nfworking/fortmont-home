@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { withBearerToken } from '@/lib/fetch-auth';
 
 type OAuthClient = {
   id: string;
@@ -15,6 +17,7 @@ type OAuthClient = {
 };
 
 export default function OAuthClientsAdmin() {
+  const { data: session } = useSession();
   const [clients, setClients] = useState<OAuthClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -24,7 +27,10 @@ export default function OAuthClientsAdmin() {
 
   const fetchClients = async () => {
     setLoading(true);
-    const res = await fetch(`${process.env.API_HOST}/api/admin/oauth-client`);
+    const res = await fetch(
+      `${process.env.API_HOST}/api/admin/oauth-client`,
+      withBearerToken(undefined, session?.accessToken),
+    );
     const data = await res.json();
     setClients(Array.isArray(data) ? data : []);
     setLoading(false);
@@ -43,6 +49,7 @@ export default function OAuthClientsAdmin() {
     const res = await fetch(`${process.env.API_HOST}/api/admin/oauth-client`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      ...withBearerToken(undefined, session?.accessToken),
       body: JSON.stringify(payload),
     });
     if (res.ok) {
@@ -66,6 +73,7 @@ export default function OAuthClientsAdmin() {
     const res = await fetch(`${process.env.API_HOST}/api/admin/oauth-client`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
+      ...withBearerToken(undefined, session?.accessToken),
       body: JSON.stringify({ clientId }),
     });
     if (res.ok) fetchClients();

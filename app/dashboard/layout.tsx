@@ -7,9 +7,15 @@ import {SessionProvider} from "next-auth/react"
 import { TicketModalProvider } from "@/components/dashboard_res/ticket-modal-context";
 
 export default async function DashboardLayout({
-     
-    }) {
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   const session = await auth();
+  if (!session?.user?.id) {
+    const { redirect } = await import("next/navigation");
+    redirect("/login");
+  }
   const sessionUser = session?.user as
     | {
         id?: string | null;
@@ -25,19 +31,19 @@ export default async function DashboardLayout({
 
   const user =
     userId || email || username
-      ? await prisma.appUsers.findFirst({
+      ? await prisma.user.findFirst({
           where: {
             OR: [
               ...(userId ? [{ id: userId }] : []),
               ...(email ? [{ email }] : []),
-              ...(username ? [{ username }] : []),
+              ...(username ? [{ email: username }] : []),
             ],
           },
           select: {
-            displayName: true,
+            id: true,
+            name: true,
             email: true,
-            avatarUrl: true,
-            githubLink: {select: { username: true } },
+            image: true,
           },
         })
       : null;
@@ -55,10 +61,10 @@ export default async function DashboardLayout({
         user={
           user
             ? {
-                name: user.displayName ?? session?.user?.name ?? null,
+                name: user.name ?? session?.user?.name ?? null,
                 email: user.email ?? session?.user?.email ?? null,
-                avatar: user.avatarUrl ?? sessionUser?.image ?? null,
-                isGithubLinked: user.githubLink?.[0]?.username !== undefined,
+                avatar: user.image ?? sessionUser?.image ?? null,
+                isGithubLinked: false,
               }
             : session?.user ?? null
         }

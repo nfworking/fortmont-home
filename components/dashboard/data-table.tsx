@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSession } from "next-auth/react"
 import {
   closestCenter,
   DndContext,
@@ -40,6 +41,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { withBearerToken } from "@/lib/fetch-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -296,6 +298,7 @@ function DraggableRow({ row }: { row: Row<ProxmoxResource> }) {
 // ── Main DataTable ─────────────────────────────────────────────────────────
 
 export function DataTable() {
+  const { data: session } = useSession()
   const [data, setData] = React.useState<ProxmoxResource[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -315,7 +318,10 @@ export function DataTable() {
 
   const fetchData = React.useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/proxmox/resources`)
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/proxmox/resources`,
+        withBearerToken(undefined, session?.accessToken),
+      )
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setData(json.data ?? json)
@@ -326,7 +332,7 @@ export function DataTable() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [session?.accessToken])
 
   React.useEffect(() => {
     fetchData()

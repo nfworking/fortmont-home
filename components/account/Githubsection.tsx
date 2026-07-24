@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner"; 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { SettingsSection, DetailRow } from "@/components/account/Settingssection";
 import { Computer, RefreshCw, Unlink, Link as LinkIcon } from "lucide-react";
 import type { AccountGitHubLink } from "./types";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 interface GitHubSectionProps {
   githubLink: AccountGitHubLink[] | null | undefined;
@@ -17,6 +19,7 @@ interface GitHubSectionProps {
 
 export function GitHubSection({ githubLink }: GitHubSectionProps) {
   const linked = githubLink?.[0];
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -54,7 +57,7 @@ export function GitHubSection({ githubLink }: GitHubSectionProps) {
       const res = await fetch("/api/github/disconnect", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        ...withBearerToken(undefined, session?.accessToken),
       });
 
       if (res.ok) {

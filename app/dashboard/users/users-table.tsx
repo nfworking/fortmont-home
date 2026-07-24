@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardHero, DashboardPage, DashboardSection } from "@/components/dashboard/page-shell";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 type ApiUserEntry = {
   id: string;
@@ -37,13 +39,14 @@ function getInitials(name: string) {
 }
 
 export function UsersTable() {
+  const { data: session } = useSession();
   const [users, setUsers] = useState<ApiUserEntry[]>([]);
 
   useEffect(() => {
     async function load() {
-      const res = await fetch(`${process.env.API_HOST}/api/users`, {
-        credentials: "include",
-        headers: { "all": "true" },
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/users`, {
+        headers: { all: "true" },
+        ...withBearerToken(undefined, session?.accessToken),
       });
 
       if (!res.ok) {
@@ -56,7 +59,7 @@ export function UsersTable() {
     }
 
     load();
-  }, []);
+  }, [session?.accessToken]);
 
   return (
     <DashboardPage>

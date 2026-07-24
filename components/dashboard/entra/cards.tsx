@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -9,12 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { withBearerToken } from "@/lib/fetch-auth"
 
 type User = {
   id: string
 }
 
 export function UserInfoCards() {
+  const { data: session } = useSession()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,10 +28,11 @@ export function UserInfoCards() {
       try {
         setLoading(true)
 
-        const res = await fetch(`${process.env.API_HOST}/api/entra/users`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra/users`, {
           headers: {
             "x-api-key": process.env.NEXT_PUBLIC_API_KEY!,
           },
+          ...withBearerToken(undefined, session?.accessToken),
         })
 
         if (!res.ok) {
@@ -36,7 +41,6 @@ export function UserInfoCards() {
 
         const data = await res.json()
 
-        // expect array
         setUsers(Array.isArray(data) ? data : data.value ?? [])
       } catch (err: any) {
         setError(err.message)
@@ -46,7 +50,7 @@ export function UserInfoCards() {
     }
 
     loadUsers()
-  }, [])
+  }, [session?.accessToken])
 
   if (loading) {
     return (

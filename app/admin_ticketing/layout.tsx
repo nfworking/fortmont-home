@@ -25,18 +25,19 @@ export default async function DashboardLayoutAdmin({
 
   const user =
     userId || email || username
-      ? await prisma.appUsers.findFirst({
+      ? await prisma.user.findFirst({
           where: {
             OR: [
               ...(userId ? [{ id: userId }] : []),
               ...(email ? [{ email }] : []),
-              ...(username ? [{ username }] : []),
+              ...(username ? [{ email: username }] : []),
             ],
           },
           select: {
-            displayName: true,
+            id: true,
+            name: true,
             email: true,
-            avatarUrl: true,
+            image: true,
           },
         })
       : null;

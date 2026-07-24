@@ -22,6 +22,7 @@ import {
   formatBytes,
   type UploadProgress,
 } from "@/lib/storage";
+import { useSession } from "next-auth/react";
 
 const STAGE_LABEL: Record<UploadProgress["stage"], string> = {
   requesting: "Requesting upload URL…",
@@ -36,6 +37,7 @@ const STAGE_VALUE: Record<UploadProgress["stage"], number> = {
 };
 
 export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -64,7 +66,7 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
           try {
             const { fileId } = await uploadFile(file, (stage) => {
               setFileStages((prev) => ({ ...prev, [index]: stage }));
-            });
+            }, session?.accessToken);
             
             toast.success(`Upload complete: ${file.name}`, {
               description: `ID: ${fileId.slice(0, 8)}…`,

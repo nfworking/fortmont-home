@@ -206,3 +206,34 @@ export function getOpenIdConfiguration(request?: Request) {
     claims_supported: ['sub', 'iss', 'aud', 'exp', 'iat', 'nonce', 'name', 'email', 'picture'],
   };
 }
+
+export type FortmontUserMe = {
+  id?: string;
+  sub?: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+  role?: string;
+};
+
+const fortmontIssuer = (process.env.FORTMONT_ISSUER ?? '').replace(/\/$/, '');
+
+export async function fetchFortmontUserMe(accessToken: string): Promise<FortmontUserMe | null> {
+  if (!fortmontIssuer || !accessToken) {
+    return null;
+  }
+
+  const response = await fetch(`${fortmontIssuer}/api/oauth/userinfo`, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return (await response.json()) as FortmontUserMe;
+}

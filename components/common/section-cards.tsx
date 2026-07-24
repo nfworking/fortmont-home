@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +15,7 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { Boxes, RefreshCw, Server, Container, Cpu, HardDrive } from "lucide-react";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -43,13 +45,17 @@ function bytesToGB(bytes: number) {
 // ── Main panel ────────────────────────────────────────────────────────────
 
 export function SectionCards({ title = "Proxmox Resources", className }: SectionCardsProps) {
+  const { data: session } = useSession();
   const [resources, setResources] = useState<ApiResourceEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/proxmox/resources`);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/proxmox/resources`,
+        withBearerToken(undefined, session?.accessToken),
+      );
       if (!res.ok) {
         setResources([]);
         return;
@@ -59,7 +65,7 @@ export function SectionCards({ title = "Proxmox Resources", className }: Section
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   useEffect(() => {
     load();

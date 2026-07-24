@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+
+import { withBearerToken } from "@/lib/fetch-auth";
 
 export interface UseApiDataResult<T> {
   data: T | null;
@@ -14,6 +17,7 @@ export function useApiData<T>(
   endpoint: string,
   params: Record<string, string | number> = {}
 ): UseApiDataResult<T> {
+  const { data: session } = useSession();
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +35,7 @@ export function useApiData<T>(
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, withBearerToken(undefined, session?.accessToken));
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       
       const json = await res.json();
@@ -47,7 +51,7 @@ export function useApiData<T>(
     } finally {
       setLoading(false);
     }
-  }, [url]);
+  }, [session?.accessToken, url]);
 
   useEffect(() => {
     doFetch();

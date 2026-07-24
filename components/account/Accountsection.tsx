@@ -1,5 +1,7 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,16 +11,21 @@ import { SettingsSection } from "@/components/account/Settingssection";
 import { Trash2 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 export function AccountSection() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) {
       return;
     }
     try {
-      const res = await fetch("/api/users", { method: "DELETE", credentials: "include" });
+      const res = await fetch(
+        "/api/users",
+        withBearerToken({ method: "DELETE" }, session?.accessToken),
+      );
       if (res.ok) {
         // After deletion, redirect to home or login page
         router.push("/");
@@ -34,7 +41,10 @@ export function AccountSection() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch("/api/users/export", { method: "GET", credentials: "include" });
+      const res = await fetch(
+        "/api/users/export",
+        withBearerToken({ method: "GET" }, session?.accessToken),
+      );
       if (!res.ok) {
         const data = await res.json();
         alert(data.error || "Failed to export data");

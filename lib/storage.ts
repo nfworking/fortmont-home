@@ -29,6 +29,19 @@ export interface AccountResponse extends SessionUser {
 
 const jsonHeaders = { "Content-Type": "application/json" } as const;
 
+function withBearerToken(init: RequestInit | undefined, accessToken?: string): RequestInit {
+  const headers = new Headers(init?.headers ?? undefined);
+
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  return {
+    ...init,
+    headers,
+  };
+}
+
 async function parseJson<T>(res: Response): Promise<T> {
   const text = await res.text();
   let data: unknown = null;
@@ -45,10 +58,10 @@ async function parseJson<T>(res: Response): Promise<T> {
   }
   return data as T;
 }
-export async function fetchAccount(): Promise<AccountResponse> {
+export async function fetchAccount(accessToken?: string): Promise<AccountResponse> {
   const res = await fetch(`${process.env.API_HOST}/api/users`, {
     method: "GET",
-    credentials: "include",
+    ...withBearerToken(undefined, accessToken),
   });
 
   const data = await parseJson<AccountResponse>(res);
@@ -66,13 +79,14 @@ export interface UploadProgress {
 export async function uploadFile(
   file: File,
   onStage?: (stage: UploadProgress["stage"]) => void,
+  accessToken?: string,
 ): Promise<{ fileId: string }> {
   // Step 1 — request a presigned upload URL.
   onStage?.("requesting");
   const uploadUrlRes = await fetch(`${process.env.API_HOST}/api/storage/upload-url`, {
     method: "POST",
     headers: jsonHeaders,
-    credentials: "include",
+    ...withBearerToken(undefined, accessToken),
     body: JSON.stringify({
       fileName: file.name,
       fileType: file.type,
@@ -101,17 +115,17 @@ export async function uploadFile(
   const completeRes = await fetch(`${process.env.API_HOST}/api/storage/complete-upload`, {
     method: "POST",
     headers: jsonHeaders,
-    credentials: "include",
+    ...withBearerToken(undefined, accessToken),
     body: JSON.stringify({ uploadId: uploadData.uploadId }),
   });
   const completeData = await parseJson<{ fileId: string }>(completeRes);
   return { fileId: completeData.fileId };
 }
 
-export async function getDownloadUrl(fileId: string): Promise<string> {
+export async function getDownloadUrl(fileId: string, accessToken?: string): Promise<string> {
   const res = await fetch(
     `${process.env.API_HOST}/api/storage/download-url?fileId=${encodeURIComponent(fileId)}`,
-    { credentials: "include" },
+    withBearerToken(undefined, accessToken),
   );
   const data = await parseJson<{ downloadUrl?: string; url?: string }>(res);
   const url = data.downloadUrl ?? data.url;
@@ -119,8 +133,8 @@ export async function getDownloadUrl(fileId: string): Promise<string> {
   return url;
 }
 
-export async function downloadFile(file: StorageFile): Promise<void> {
-  const url = await getDownloadUrl(file.id);
+export async function downloadFile(file: StorageFile, accessToken?: string): Promise<void> {
+  const url = await getDownloadUrl(file.id, accessToken);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = file.name;

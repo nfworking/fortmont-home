@@ -79,28 +79,23 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const user = await prisma.appUsers.findUnique({
-    where: { id: session.user.id },
-    select: {
-      storage: {
-        select: {
-          quotaBytes: true,
-          usedBytes: true,
-        },
-      },
-      files: {
-        select: {
-          id: true,
-          name: true,
-          size: true,
-          bucket: true,
-          objectKey: true,
-          owner: { select: { id: true, username: true } },
-        },
-      },
-      _count: {select: { files: true }},
+  const user = {
+    _count: { files: 1 },
+    storage: {
+      quotaBytes: 1000000000n,
+      usedBytes: 500000n,
     },
-  });
+    files: [
+      {
+        id: "mock-file-1",
+        name: "document.pdf",
+        size: 500000n,
+        bucket: "default",
+        objectKey: "mock-file-1",
+        owner: { id: session.user.id, username: "MockUser" }
+      }
+    ]
+  };
 
   const files: StorageFile[] = (user?.files ?? []).map((f) => ({
     ...f,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type ReactNode } from "react";
+import { useSession } from "next-auth/react";
 import {
   Server, Container, ShieldCheck, Globe, Users,
   Activity, Cpu, HardDrive, Wifi, AlertCircle,
@@ -8,6 +9,7 @@ import {
   ArrowUpRight, AppWindow
 } from "lucide-react";
 import type { ClusterSummary, PveNode } from "@/lib/proxmox";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 const POLL_INTERVAL = 5_000; // ms
 
@@ -162,6 +164,7 @@ function QuickLink({
 
 // ── Proxmox Polling hook ───────────────────────────────────────────────────
 function useClusterSummary() {
+  const { data: session } = useSession();
   const [data,      setData]      = useState<ClusterSummary | null>(null);
   const [error,     setError]     = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
@@ -170,7 +173,10 @@ function useClusterSummary() {
   const fetch_ = useCallback(async () => {
     setSpinning(true);
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/proxmox/summary`);
+      const res = await fetch(
+        `${process.env.API_HOST}/api/proxmox/summary`,
+        withBearerToken(undefined, session?.accessToken),
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Request failed");
       setData(json.data);
@@ -181,7 +187,7 @@ function useClusterSummary() {
       setLastFetch(new Date());
       setSpinning(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   useEffect(() => {
     fetch_();
@@ -194,13 +200,17 @@ function useClusterSummary() {
 
 // ── Compose Apps Polling Hook ──────────────────────────────────────────────
 function useComposeApps() {
+  const { data: session } = useSession();
   const [apps, setApps] = useState<ComposeApp[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchApps = useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/operations/get/apps`);
+      const res = await fetch(
+        `${process.env.API_HOST}/api/operations/get/apps`,
+        withBearerToken(undefined, session?.accessToken),
+      );
       const json = await res.json();
       
       if (!res.ok) throw new Error(json.error ?? "Failed to fetch apps data");
@@ -211,7 +221,7 @@ function useComposeApps() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   useEffect(() => {
     fetchApps();

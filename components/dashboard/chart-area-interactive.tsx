@@ -8,6 +8,7 @@ import {
   Line,
   LineChart,
 } from "recharts"
+import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import {
   Card,
@@ -24,6 +25,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { withBearerToken } from "@/lib/fetch-auth"
 import {
   Activity,
   Cpu,
@@ -119,6 +121,7 @@ function StatCard({
 }
 
 export function ChartAreaInteractive() {
+  const { data: session } = useSession()
   const [netHistory, setNetHistory] = React.useState<TimePoint[]>([])
   const [vmNames, setVmNames] = React.useState<string[]>([])
   const [nodeStats, setNodeStats] = React.useState<NodeStats | null>(null)
@@ -131,7 +134,10 @@ export function ChartAreaInteractive() {
   const fetchAndAppend = React.useCallback(async (manual = false) => {
     if (manual) setRefreshing(true)
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/proxmox/resources`)
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/proxmox/resources`,
+        withBearerToken(undefined, session?.accessToken),
+      )
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       const all: ProxmoxResource[] = json.data ?? json
@@ -197,7 +203,7 @@ export function ChartAreaInteractive() {
     } finally {
       if (manual) setRefreshing(false)
     }
-  }, [])
+  }, [session?.accessToken])
 
   React.useEffect(() => {
     fetchAndAppend()

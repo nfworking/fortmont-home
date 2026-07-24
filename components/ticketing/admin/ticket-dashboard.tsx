@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { LayoutGrid, List, Plus, RefreshCw, UserRound } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +15,7 @@ import { TicketList } from './ticket-list';
 import { TicketFilters, FilterState } from './ticket-filters';
 import { Ticket, User, Comment } from './ticket'; // 🔥 FIXED: Added explicit Comment import
 import { TicketDetailSheet } from './ticket-detail-sheet';
+import { withBearerToken } from '@/lib/fetch-auth';
 
 interface TicketDashboardProps {
   tickets?: Ticket[];
@@ -56,6 +58,7 @@ function getAvailableUsers(tickets: Ticket[]) {
 }
 
 export function TicketDashboard({ tickets = [], users: initialUsers = [] }: TicketDashboardProps) {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [isCreatingTicket, setIsCreatingTicket] = React.useState(false);
@@ -229,10 +232,10 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     try {
       const res = await fetch(`${process.env.API_HOST}/api/ticketing/get/ticket?refresh=${Date.now()}`, {
         cache: 'no-store',
-        credentials: 'include',
         headers: { 
           'Cache-Control': 'no-cache' 
         },
+        ...withBearerToken(undefined, session?.accessToken),
       });
       
       if (!res.ok) throw new Error(`Refresh failed with ${res.status}`);
@@ -244,7 +247,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     } finally {
       if (!silent) setIsLoading(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   const POLL_INTERVAL_MS = 5000;
 
@@ -281,6 +284,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
       const res = await fetch(`${process.env.API_HOST}/api/ticketing/patch/ticket/${ticket.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify(updates),
       });
 
@@ -304,8 +308,8 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     try {
       const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket/${ticket.id}/comments`, {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({ text }),
       });
 
@@ -341,6 +345,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
       const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({
           type: form.type,
           department: form.department,

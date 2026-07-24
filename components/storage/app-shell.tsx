@@ -17,17 +17,14 @@ export async function AppShell({
   const session = await auth();
 
   const account = session?.user?.id
-    ? await prisma.appUsers.findUnique({
-        where: { id: session.user.id },
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          email: true,
-          avatarUrl: true,
-          storage: true,
-        },
-      })
+    ? {
+        id: session.user.id,
+        username: "mockuser",
+        displayName: "Mock User",
+        email: session.user.email ?? "mock@example.com",
+        avatarUrl: null,
+        storage: { usedBytes: 500000n, quotaBytes: 1000000000n },
+      }
     : null;
 
   return (

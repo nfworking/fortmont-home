@@ -20,6 +20,8 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 import {
   Select,
@@ -42,6 +44,7 @@ export function CreateDnsRecordDialog({
   onOpenChange,
   onCreated,
 }: Props) {
+  const { data: session } = useSession();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,11 +65,12 @@ export function CreateDnsRecordDialog({
     setIsCreating(true);
 
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/dns`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/dns`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({
           zone: form.zone.trim(),
           domain: form.domain.trim(),

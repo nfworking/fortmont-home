@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useSession } from "next-auth/react";
 import {
   BarChart,
   Bar,
@@ -28,6 +29,7 @@ import {
   Activity,
   ChevronDown,
 } from "lucide-react";
+import { withBearerToken } from "@/lib/fetch-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +58,7 @@ interface BandwidthSample {
 }
 
 export function UnifiDashboard() {
+  const { data: session } = useSession();
   const [snapshot, setSnapshot] = useState<UnifiDashboardSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +71,10 @@ export function UnifiDashboard() {
   const load = useCallback(async (siteId?: string) => {
     try {
       const qs = siteId ? `?siteId=${encodeURIComponent(siteId)}` : "";
-      const res = await fetch(`${process.env.API_HOST}/api/unifi${qs}`, { cache: "no-store" });
+      const res = await fetch(
+        `${process.env.API_HOST}/api/unifi${qs}`,
+        withBearerToken({ cache: "no-store" }, session?.accessToken),
+      );
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `Request failed (${res.status})`);
@@ -82,7 +88,7 @@ export function UnifiDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.accessToken]);
 
   useEffect(() => {
     load();
@@ -99,6 +105,7 @@ export function UnifiDashboard() {
       fetch(`${process.env.API_HOST}/api/unifi`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({ siteId: siteIdRef.current, deviceId, action }),
       }).then((res) => {
         if (!res.ok) throw new Error("Action failed");

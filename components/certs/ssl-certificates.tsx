@@ -26,7 +26,7 @@ export default function ProxyPage() {
     setIsRefreshing(true);
 
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/proxy/certs`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST ?? ""}/api/proxy/certs`);
 
       if (!res.ok) {
         setCerts([]);
@@ -36,8 +36,7 @@ export default function ProxyPage() {
       const data = (await res.json()) as ProxyApiResponse;
       setCerts(Array.isArray(data.certs) ? data.certs : []);
       setLastRefreshedAt(new Date());
-    } catch (error) {
-      // Catch fetch/network errors to keep it resilient
+    } catch {
       setCerts([]);
     } finally {
       setIsRefreshing(false);
@@ -93,7 +92,7 @@ export default function ProxyPage() {
             <tbody>
               {certs.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-sm text-muted-foreground text-center" colSpan={4}>
+                  <td className="px-4 py-6 text-center text-sm text-muted-foreground" colSpan={4}>
                     {isRefreshing ? "Fetching certificates..." : "No certificates found."}
                   </td>
                 </tr>
@@ -101,11 +100,9 @@ export default function ProxyPage() {
                 certs.map((cert) => (
                   <tr
                     key={`${cert.main}-${cert.not_after}`}
-                    className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors"
+                    className="border-b border-border/40 last:border-0 transition-colors hover:bg-muted/30"
                   >
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {cert.main}
-                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-foreground">{cert.main}</td>
 
                     <td className="px-4 py-3 text-sm text-foreground">
                       <span className="rounded bg-muted/60 px-1.5 py-0.5 text-xs font-mono text-muted-foreground">
@@ -120,7 +117,7 @@ export default function ProxyPage() {
                       })}
                     </td>
 
-                    <td className="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate" title={cert.sans.join(", ")}>
+                    <td className="max-w-xs truncate px-4 py-3 text-sm text-muted-foreground" title={cert.sans.join(", ")}>
                       {cert.sans && cert.sans.length > 0 ? cert.sans.join(", ") : "-"}
                     </td>
                   </tr>

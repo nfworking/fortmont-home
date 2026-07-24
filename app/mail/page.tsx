@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useEffect, useRef, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Email, FolderType, MailboxResponse, UserSession } from "@/components/mail/mail"
 import { getEmailContact, extractEmail, extractName, formatFullDate } from "@/components/mail/formatters"
 import { Sidebar } from "@/components/mail/Sidebar"
@@ -9,8 +10,10 @@ import { EmailList } from "@/components/mail/EmailList"
 import { ReadingPane } from "@/components/mail/ReadingPane"
 import { Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { withBearerToken } from "@/lib/fetch-auth"
 
 export default function MailClient() {
+  const { data: authSession } = useSession()
   const [session,       setSession]       = useState<UserSession | null>(null)
   const [mailbox,       setMailbox]       = useState<MailboxResponse | null>(null)
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null)
@@ -33,10 +36,13 @@ export default function MailClient() {
   useEffect(() => {
     async function fetchSession() {
       try {
-        const res  = await fetch(`${process.env.API_HOST}/api/auth/session`, { credentials: "include" })
-        const data = await res.json()
-        setSession(data)
-        if (data?.user) fetchEmails("inbox")
+        if (!authSession?.user) {
+          setLoading(false)
+          return
+        }
+
+        setSession(authSession as UserSession)
+        fetchEmails("inbox")
       } catch (e) {
         console.error(e)
       } finally {
@@ -44,7 +50,7 @@ export default function MailClient() {
       }
     }
     fetchSession()
-  }, [])
+  }, [authSession])
 
   useEffect(() => {
     if (!selectedEmail) return
@@ -69,7 +75,7 @@ export default function MailClient() {
         archive: "/api/mailbox/archive",
         trash:   "/api/mailbox/trash",
       }
-      const res = await fetch(endpointMap[folder], { credentials: "include" })
+      const res = await fetch(endpointMap[folder], withBearerToken(undefined, authSession?.accessToken))
       if (res.ok) setMailbox(await res.json())
       else setMailbox({ mailbox: "", count: 0, emails: [] })
     } catch (e) {
@@ -97,8 +103,8 @@ export default function MailClient() {
     try {
       const res = await fetch(`${process.env.API_HOST}/api/mailbox/send`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
+        ...withBearerToken(undefined, authSession?.accessToken),
         body: JSON.stringify({
           to:      replyTo.trim(),
           subject: replySubject.trim(),
