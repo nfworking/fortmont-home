@@ -26,6 +26,25 @@ function normalizeStatus(status: Ticket['status']) {
   return (status ?? 'open').toLowerCase();
 }
 
+function normalizeTicketsPayload(payload: unknown): Ticket[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (payload && typeof payload === 'object') {
+    const record = payload as Record<string, unknown>;
+    const candidates = [record.tickets, record.items, record.data, record.results];
+
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate as Ticket[];
+      }
+    }
+  }
+
+  return [];
+}
+
 
 
 function displayName(user: User | null | undefined, fallback: string) {
@@ -59,10 +78,11 @@ function getAvailableUsers(tickets: Ticket[]) {
 
 export function TicketDashboard({ tickets = [], users: initialUsers = [] }: TicketDashboardProps) {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [isCreatingTicket, setIsCreatingTicket] = React.useState(false);
-  const [ticketRows, setTicketRows] = React.useState<Ticket[]>(tickets);
+  const [ticketRows, setTicketRows] = React.useState<Ticket[]>(() => normalizeTicketsPayload(tickets));
   const [filters, setFilters] = React.useState<FilterState>({
     search: '',
     priority: 'All Priorities',
@@ -81,11 +101,13 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
   // Listen for changes in the URL query parameters
   React.useEffect(() => {
     if (searchParams.get('new') === 'true') {
-      setIsCreateDialogOpen(true);
-      
+      const openTimer = window.setTimeout(() => setIsCreateDialogOpen(true), 0);
+
       const params = new URLSearchParams(searchParams.toString());
       params.delete('new');
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+      return () => window.clearTimeout(openTimer);
     }
   }, [searchParams, router, pathname]);
 
@@ -122,7 +144,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     const connect = () => {
       if (cancelled) return;
 
-      eventSource = new EventSource(`${process.env.API_HOST}/api/ticketing/stream/tickets/${selectedTicketId}/stream`);
+      eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/stream/tickets/${selectedTicketId}/stream`);
 
       eventSource.onopen = () => {
         attempt = 0;
@@ -230,16 +252,16 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     if (!silent) setIsLoading(true);
 
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/ticketing/get/ticket?refresh=${Date.now()}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/get/ticket?refresh=${Date.now()}`, {
         cache: 'no-store',
         headers: { 
           'Cache-Control': 'no-cache' 
         },
-        ...withBearerToken(undefined, session?.accessToken),
+        ...withBearerToken(undefined, accessToken),
       });
       
       if (!res.ok) throw new Error(`Refresh failed with ${res.status}`);
-      const refreshedTickets = await res.json();
+      const refreshedTickets = normalizeTicketsPayload(await res.json());
       setTicketRows(refreshedTickets);
     } catch (error) {
       console.error('Ticket refresh failed:', error);
@@ -247,7 +269,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     } finally {
       if (!silent) setIsLoading(false);
     }
-  }, [session?.accessToken]);
+  }, [accessToken]);
 
   const POLL_INTERVAL_MS = 5000;
 
@@ -281,7 +303,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     setTicketRows(nextRows.filter((row) => normalizeStatus(row.status) !== 'closed'));
 
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/ticketing/patch/ticket/${ticket.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/patch/ticket/${ticket.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         ...withBearerToken(undefined, session?.accessToken),
@@ -306,7 +328,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     setIsSubmittingComment(true);
 
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket/${ticket.id}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/post/ticket/${ticket.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         ...withBearerToken(undefined, session?.accessToken),
@@ -342,7 +364,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
     setIsCreatingTicket(true);
 
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/ticketing/post/ticket`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/post/ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         ...withBearerToken(undefined, session?.accessToken),

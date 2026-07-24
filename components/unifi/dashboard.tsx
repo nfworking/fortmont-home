@@ -72,7 +72,7 @@ export function UnifiDashboard() {
     try {
       const qs = siteId ? `?siteId=${encodeURIComponent(siteId)}` : "";
       const res = await fetch(
-        `${process.env.API_HOST}/api/unifi${qs}`,
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/unifi${qs}`,
         withBearerToken({ cache: "no-store" }, session?.accessToken),
       );
       if (!res.ok) {

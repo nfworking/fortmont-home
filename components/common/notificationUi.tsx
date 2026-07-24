@@ -20,7 +20,6 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import {
   Popover,
   PopoverContent,
@@ -44,6 +43,42 @@ interface ApiNotification {
 
 // userId is dropped — it's always the logged-in user, nothing to render with it
 type Notification = Omit<ApiNotification, "userId">
+
+function isApiNotification(value: unknown): value is ApiNotification {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
+  const candidate = value as Partial<ApiNotification>
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.type === "string" &&
+    typeof candidate.title === "string" &&
+    typeof candidate.description === "string" &&
+    typeof candidate.createdAt === "string" &&
+    typeof candidate.read === "boolean" &&
+    typeof candidate.userId === "string"
+  )
+}
+
+function normalizeNotificationsPayload(payload: unknown): ApiNotification[] {
+  if (Array.isArray(payload)) {
+    return payload.filter(isApiNotification)
+  }
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>
+    const candidates = [record.notifications, record.items, record.data, record.results]
+
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate.filter(isApiNotification)
+      }
+    }
+  }
+
+  return []
+}
 
 const NOTIFICATIONS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_HOST}/api/notifications/get`
 const POLL_INTERVAL_MS = 2000
@@ -192,6 +227,7 @@ function NotificationItem({
 
 export function NotificationPanel() {
   const { data: session } = useSession()
+  const accessToken = session?.accessToken
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [hasError, setHasError] = React.useState(false)
@@ -200,19 +236,21 @@ export function NotificationPanel() {
   // doesn't bring the item back before the backend catches up.
   const dismissedIdsRef = React.useRef<Set<string>>(new Set())
 
- const fetchNotifications = React.useCallback(async () => {
+  const fetchNotifications = React.useCallback(async () => {
     try {
       const res = await fetch(NOTIFICATIONS_ENDPOINT, {
-        ...withBearerToken(undefined, session?.accessToken),
+        ...withBearerToken(undefined, accessToken),
       });
 
-      // Explicitly type the incoming API response data here
-      const data: ApiNotification[] = await res.json();
+      const data = normalizeNotificationsPayload(await res.json());
 
       setNotifications(
         data
           .filter((n) => !dismissedIdsRef.current.has(n.id))
-          .map(({ userId, ...rest }) => rest)
+          .map(({ userId, ...rest }) => {
+            void userId
+            return rest
+          })
           .sort(
             (a, b) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -225,7 +263,7 @@ export function NotificationPanel() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [accessToken])
 
   React.useEffect(() => {
     fetchNotifications()

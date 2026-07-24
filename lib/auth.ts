@@ -24,9 +24,24 @@ if (!issuer) {
   console.warn("[auth] FORTMONT_ISSUER is not set; OAuth login will be unavailable");
 }
 
-const fortmontScopes = process.env.FORTMONT_SCOPES?.trim() || "openid profile email offline_access";
+function ensureOfflineAccessScope(scopeValue: string) {
+  const scopes = scopeValue
+    .split(/\s+/)
+    .map((scope) => scope.trim())
+    .filter(Boolean);
 
-const fortmontProvider: any = {
+  if (!scopes.includes("offline_access")) {
+    scopes.push("offline_access");
+  }
+
+  return Array.from(new Set(scopes)).join(" ");
+}
+
+const fortmontScopes = ensureOfflineAccessScope(
+  process.env.FORTMONT_SCOPES?.trim() || "openid profile email"
+);
+
+const fortmontProvider = {
   id: "fortmont",
   name: "Fortmont",
   type: "oauth",
@@ -47,16 +62,18 @@ const fortmontProvider: any = {
     token_endpoint_auth_method: "client_secret_post",
   },
   checks: ["pkce", "state"],
-  profile(profile: any) {
+  profile(profile: Record<string, unknown>) {
+    const fortmontProfile = profile as FortmontProfile;
+
     return {
-      id: profile.sub,
-      email: profile.email,
-      name: profile.name,
-      image: profile.picture,
-      role: profile.role,
+      id: fortmontProfile.sub,
+      email: fortmontProfile.email,
+      name: fortmontProfile.name,
+      image: fortmontProfile.picture,
+      role: fortmontProfile.role,
     };
   },
-};
+} as Provider;
 
 async function refreshFortmontAccessToken(token: {
   accessToken?: string;
@@ -95,13 +112,29 @@ async function refreshFortmontAccessToken(token: {
       throw data;
     }
 
-    return {
+    const refreshedToken = {
       ...token,
       accessToken: data.access_token,
       accessTokenExpiresAt: Math.floor(Date.now() / 1000) + (data.expires_in ?? 3600),
       refreshToken: data.refresh_token ?? token.refreshToken,
       error: undefined,
     };
+
+    if (token.sub) {
+      await prisma.account.updateMany({
+        where: {
+          userId: token.sub,
+          provider: "fortmont",
+        },
+        data: {
+          access_token: refreshedToken.accessToken,
+          refresh_token: refreshedToken.refreshToken,
+          expires_at: refreshedToken.accessTokenExpiresAt,
+        },
+      });
+    }
+
+    return refreshedToken;
   } catch {
     return { ...token, error: "RefreshAccessTokenError" as const };
   }
@@ -143,6 +176,20 @@ const nextAuth = NextAuth((request) => {
           token.accessToken = account.access_token;
           token.refreshToken = account.refresh_token ?? token.refreshToken;
           token.accessTokenExpiresAt = account.expires_at ?? undefined;
+
+          if (token.sub) {
+            await prisma.account.updateMany({
+              where: {
+                userId: token.sub,
+                provider: "fortmont",
+              },
+              data: {
+                access_token: account.access_token,
+                refresh_token: account.refresh_token ?? token.refreshToken,
+                expires_at: account.expires_at ?? undefined,
+              },
+            });
+          }
         }
 
         if (token.sub && token.sessionId) {
@@ -222,16 +269,16 @@ const nextAuth = NextAuth((request) => {
           },
         });
 
-        if (typeof account?.access_token === "string") {
-          session.accessToken = account.access_token;
-        } else if (typeof token.accessToken === "string") {
+        if (typeof token.accessToken === "string") {
           session.accessToken = token.accessToken;
+        } else if (typeof account?.access_token === "string") {
+          session.accessToken = account.access_token;
         }
 
-        if (typeof account?.refresh_token === "string") {
-          session.refreshToken = account.refresh_token;
-        } else if (typeof token.refreshToken === "string") {
+        if (typeof token.refreshToken === "string") {
           session.refreshToken = token.refreshToken;
+        } else if (typeof account?.refresh_token === "string") {
+          session.refreshToken = account.refresh_token;
         }
 
         if (token.error) {
@@ -266,8 +313,15 @@ const nextAuth = NextAuth((request) => {
 
 export const { handlers, signIn, signOut } = nextAuth;
 
-export async function auth(...args: any[]) {
-  const session = await (nextAuth.auth as any)(...args);
+type FortmontSession = {
+  user?: {
+    sessionId?: string | null;
+  } | null;
+} | null;
+
+export async function auth(...args: unknown[]) {
+  const authHandler = nextAuth.auth as (...callArgs: unknown[]) => Promise<FortmontSession>;
+  const session = await authHandler(...args);
 
   if (session?.user?.sessionId) {
     const activeSession = await prisma.session.findUnique({

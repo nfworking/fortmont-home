@@ -1,11 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { withBearerToken } from '@/lib/fetch-auth';
+
+function ensureOfflineAccessScope(scopes: string) {
+  const normalizedScopes = scopes
+    .split(/\s+/)
+    .map((scope) => scope.trim())
+    .filter(Boolean);
+
+  if (!normalizedScopes.includes('offline_access')) {
+    normalizedScopes.push('offline_access');
+  }
+
+  return Array.from(new Set(normalizedScopes)).join(' ');
+}
 
 type OAuthClient = {
   id: string;
@@ -18,33 +31,37 @@ type OAuthClient = {
 
 export default function OAuthClientsAdmin() {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [clients, setClients] = useState<OAuthClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newRedirect, setNewRedirect] = useState('');
-  const [newScopes, setNewScopes] = useState('openid profile email');
+  const [newScopes, setNewScopes] = useState('openid profile email offline_access');
 
-  const fetchClients = async () => {
-    setLoading(true);
+  const fetchClients = useCallback(async () => {
     const res = await fetch(
       `${process.env.API_HOST}/api/admin/oauth-client`,
-      withBearerToken(undefined, session?.accessToken),
+      withBearerToken(undefined, accessToken),
     );
     const data = await res.json();
     setClients(Array.isArray(data) ? data : []);
     setLoading(false);
-  };
+  }, [accessToken]);
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void fetchClients();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchClients]);
 
   const handleCreate = async () => {
     const payload = {
       name: newName,
       redirectUris: newRedirect.split(',').map((s) => s.trim()),
-      scopes: newScopes.split(' ').map((s) => s.trim()),
+      scopes: ensureOfflineAccessScope(newScopes).split(' '),
     };
     const res = await fetch(`${process.env.API_HOST}/api/admin/oauth-client`, {
       method: 'POST',
@@ -60,7 +77,7 @@ export default function OAuthClientsAdmin() {
       setShowCreate(false);
       setNewName('');
       setNewRedirect('');
-      setNewScopes('openid profile email');
+      setNewScopes('openid profile email offline_access');
       fetchClients();
     } else {
       const err = await res.text();
