@@ -24,7 +24,7 @@ export function TicketModalProvider({ children }: { children: React.ReactNode })
     const fetchUsers = async () => {
       try {
         const res = await fetch(
-          `${process.env.API_HOST ?? ""}/api/ticketing/get/users`,
+          `${process.env.NEXT_PUBLIC_API_HOST ?? ""}/api/ticketing/get/users`,
           withBearerToken(undefined, session?.accessToken),
         );
 
@@ -47,7 +47,7 @@ export function TicketModalProvider({ children }: { children: React.ReactNode })
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${process.env.API_HOST ?? ""}/api/ticketing/post/ticket`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST ?? ""}/api/ticketing/post/ticket`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

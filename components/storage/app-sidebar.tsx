@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {signOut} from "next-auth/react";
 
 const items = [
   { title: "My Storage", url: "/platform/account?section=storage-acc", icon: LayoutDashboard },
@@ -85,7 +86,24 @@ export function AppSidebar({ account, usedBytes, quotaBytes }: AppSidebarProps) 
           {/* Convert back to BigInt if your StorageWidget explicitly requires it */}
           <StorageWidget usedBytes={BigInt(usedBytes)} quotaBytes={BigInt(quotaBytes)} />
         </div>
-        
+        <button
+          className="w-full px-3 py-2 rounded-lg hover:bg-black/20 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm font-medium mb-4"
+          onClick={() => {
+           window.location.href = "/dashboard";  // Navigate to dashboard
+          }}
+        >
+          Return to dashboard
+        </button>
+        <button
+          className="w-full px-3 py-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm font-medium mb-4"
+          onClick={() => {
+            // Handle sign out click
+            signOut({ callbackUrl: "/login" });
+          }}
+        >
+          Sign Out
+        </button>
+
         <div className="flex items-center justify-center gap-2 px-1 py-1.5 mb-10">
           <Avatar className="h-8 w-8 shrink-0 rounded-md">
             {account?.avatarUrl ? (

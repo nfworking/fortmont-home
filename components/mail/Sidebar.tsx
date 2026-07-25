@@ -14,6 +14,7 @@ import {
   File,
   Inbox,
   LogOut,
+  PenSquare,
   MessageCircle,
   Send,
   ShoppingCart,
@@ -28,9 +29,10 @@ interface SidebarProps {
   activeFolder: FolderType
   unreadCount: number
   onFolderChange: (folder: FolderType) => void
+  onCompose: () => void
 }
 
-export function Sidebar({ userName, activeFolder, unreadCount, onFolderChange }: SidebarProps) {
+export function Sidebar({ userName, activeFolder, unreadCount, onFolderChange, onCompose }: SidebarProps) {
   const userInitials = getInitials(userName)
 
   const FOLDER_NAV: { label: string; folder: FolderType; icon: React.ReactNode }[] = [
@@ -65,6 +67,14 @@ export function Sidebar({ userName, activeFolder, unreadCount, onFolderChange }:
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        <button
+          onClick={onCompose}
+          className="mb-2 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 cursor-pointer"
+        >
+          <PenSquare className="size-3.5" />
+          Compose
+        </button>
+
         {FOLDER_NAV.map(({ label, folder, icon }) => {
           const isActive = activeFolder === folder
           return (

@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardHero, DashboardPage, DashboardSection } from "@/components/dashboard/page-shell";
-import { withBearerToken } from "@/lib/fetch-auth";
 
 type ApiUserEntry = {
   id: string;
@@ -39,15 +37,11 @@ function getInitials(name: string) {
 }
 
 export function UsersTable() {
-  const { data: session } = useSession();
   const [users, setUsers] = useState<ApiUserEntry[]>([]);
 
   useEffect(() => {
     async function load() {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/users`, {
-        headers: { all: "true" },
-        ...withBearerToken(undefined, session?.accessToken),
-      });
+      const res = await fetch("/api/users", { cache: "no-store" });
 
       if (!res.ok) {
         setUsers([]);
@@ -55,11 +49,19 @@ export function UsersTable() {
       }
 
       const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
+      const parsedUsers = Array.isArray(data)
+        ? data
+        : Array.isArray((data as { users?: unknown[] }).users)
+          ? (data as { users: ApiUserEntry[] }).users
+          : Array.isArray((data as { data?: unknown[] }).data)
+            ? (data as { data: ApiUserEntry[] }).data
+            : [];
+
+      setUsers(parsedUsers);
     }
 
     load();
-  }, [session?.accessToken]);
+  }, []);
 
   return (
     <DashboardPage>

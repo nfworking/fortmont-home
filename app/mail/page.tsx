@@ -8,9 +8,16 @@ import { getEmailContact, extractEmail, extractName, formatFullDate } from "@/co
 import { Sidebar } from "@/components/mail/Sidebar"
 import { EmailList } from "@/components/mail/EmailList"
 import { ReadingPane } from "@/components/mail/ReadingPane"
+import { ComposeDialog, ComposeEmailDraft } from "@/components/mail/ComposeDialog"
 import { Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { withBearerToken } from "@/lib/fetch-auth"
+
+interface SendEmailPayload {
+  to: string
+  subject: string
+  text: string
+}
 
 export default function MailClient() {
   const { data: authSession } = useSession()
@@ -30,6 +37,11 @@ export default function MailClient() {
   const [sending,      setSending]      = useState(false)
   const [sendError,    setSendError]    = useState<string | null>(null)
   const [sendSuccess,  setSendSuccess]  = useState(false)
+  const [composeOpen,  setComposeOpen]  = useState(false)
+  const [composeDraft, setComposeDraft] = useState<ComposeEmailDraft>({ to: "", subject: "", body: "" })
+  const [composeSending, setComposeSending] = useState(false)
+  const [composeError, setComposeError] = useState<string | null>(null)
+  const [composeSuccess, setComposeSuccess] = useState(false)
 
   const replyRef = useRef<HTMLTextAreaElement>(null)
 
@@ -68,12 +80,12 @@ export default function MailClient() {
     setSelectedEmail(null)
     try {
       const endpointMap: Record<FolderType, string> = {
-        inbox:   "/api/mailbox/inbox",
-        sent:    "/api/mailbox/send/get",
-        drafts:  "/api/mailbox/drafts",
-        starred: "/api/mailbox/starred",
-        archive: "/api/mailbox/archive",
-        trash:   "/api/mailbox/trash",
+        inbox:   `${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/inbox`,
+        sent:    `${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/send/get`,
+        drafts:  `${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/drafts`,
+        starred: `${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/starred`,
+        archive: `${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/archive`,
+        trash:   `${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/trash`,
       }
       const res = await fetch(endpointMap[folder], withBearerToken(undefined, authSession?.accessToken))
       if (res.ok) setMailbox(await res.json())
@@ -93,6 +105,20 @@ export default function MailClient() {
     }
   }
 
+  async function sendEmail(payload: SendEmailPayload): Promise<void> {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/mailbox/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      ...withBearerToken(undefined, authSession?.accessToken),
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(data.error || "Failed to send")
+    }
+  }
+
   async function handleSendReply(e: React.FormEvent) {
     e.preventDefault()
     if (!replyTo.trim()) { setSendError("No recipient address"); return }
@@ -101,20 +127,11 @@ export default function MailClient() {
     setSendError(null)
     setSendSuccess(false)
     try {
-      const res = await fetch(`${process.env.API_HOST}/api/mailbox/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        ...withBearerToken(undefined, authSession?.accessToken),
-        body: JSON.stringify({
-          to:      replyTo.trim(),
-          subject: replySubject.trim(),
-          text:    replyBody,
-        }),
+      await sendEmail({
+        to: replyTo.trim(),
+        subject: replySubject.trim(),
+        text: replyBody,
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || "Failed to send")
-      }
       setSendSuccess(true)
       setReplyBody("")
       if (activeFolder === "sent") fetchEmails("sent")
@@ -122,6 +139,56 @@ export default function MailClient() {
       setSendError(err instanceof Error ? err.message : "Failed to send")
     } finally {
       setSending(false)
+    }
+  }
+
+  async function handleSendCompose(draft: ComposeEmailDraft): Promise<void> {
+    if (!draft.to.trim()) {
+      setComposeError("Recipient is required")
+      return
+    }
+    if (!draft.body.trim()) {
+      setComposeError("Message body is empty")
+      return
+    }
+
+    setComposeSending(true)
+    setComposeError(null)
+    setComposeSuccess(false)
+
+    try {
+      await sendEmail({
+        to: draft.to.trim(),
+        subject: draft.subject.trim(),
+        text: draft.body,
+      })
+
+      setComposeSuccess(true)
+      setComposeDraft({ to: "", subject: "", body: "" })
+      if (activeFolder === "sent") fetchEmails("sent")
+
+      window.setTimeout(() => {
+        setComposeOpen(false)
+        setComposeSuccess(false)
+      }, 700)
+    } catch (err) {
+      setComposeError(err instanceof Error ? err.message : "Failed to send")
+    } finally {
+      setComposeSending(false)
+    }
+  }
+
+  function handleComposeOpenChange(open: boolean) {
+    setComposeOpen(open)
+    if (open) {
+      setComposeError(null)
+      setComposeSuccess(false)
+      return
+    }
+
+    if (!composeSending) {
+      setComposeError(null)
+      setComposeSuccess(false)
     }
   }
 
@@ -167,7 +234,7 @@ export default function MailClient() {
           <p className="text-sm text-muted-foreground mt-2">Sign in to access your mailbox</p>
         </div>
         <Button
-          onClick={() => (window.location.href = "/login_webmail?callbackUrl=/mail")}
+          onClick={() => (window.location.href = "/login?callbackUrl=/mail")}
           className="h-9 px-6"
         >
           Sign in
@@ -187,6 +254,7 @@ export default function MailClient() {
         activeFolder={activeFolder}
         unreadCount={unreadCount}
         onFolderChange={handleFolderChange}
+        onCompose={() => setComposeOpen(true)}
       />
 
       <EmailList
@@ -216,6 +284,17 @@ export default function MailClient() {
         setMuteThread={setMuteThread}
         handleSendReply={handleSendReply}
         openForwardCompose={openForwardCompose}
+      />
+
+      <ComposeDialog
+        open={composeOpen}
+        onOpenChange={handleComposeOpenChange}
+        draft={composeDraft}
+        onDraftChange={setComposeDraft}
+        onSend={handleSendCompose}
+        sending={composeSending}
+        sendError={composeError}
+        sendSuccess={composeSuccess}
       />
     </div>
   )

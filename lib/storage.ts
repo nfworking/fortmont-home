@@ -110,7 +110,7 @@ export async function uploadFile(
 ): Promise<{ fileId: string }> {
   // Step 1 — request a presigned upload URL.
   onStage?.("requesting");
-  const uploadUrlRes = await fetch(`${process.env.API_HOST}/api/storage/upload-url`, {
+  const uploadUrlRes = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/storage/upload-url`, {
     method: "POST",
     headers: jsonHeaders,
     ...withBearerToken(undefined, accessToken),
@@ -139,7 +139,7 @@ export async function uploadFile(
 
   // Step 3 — finalize the upload.
   onStage?.("finalizing");
-  const completeRes = await fetch(`${process.env.API_HOST}/api/storage/complete-upload`, {
+  const completeRes = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/storage/complete-upload`, {
     method: "POST",
     headers: jsonHeaders,
     ...withBearerToken(undefined, accessToken),
@@ -151,7 +151,7 @@ export async function uploadFile(
 
 export async function getDownloadUrl(fileId: string, accessToken?: string): Promise<string> {
   const res = await fetch(
-    `${process.env.API_HOST}/api/storage/download-url?fileId=${encodeURIComponent(fileId)}`,
+    `${process.env.NEXT_PUBLIC_API_HOST}/api/storage/download-url?fileId=${encodeURIComponent(fileId)}`,
     withBearerToken(undefined, accessToken),
   );
   const data = await parseJson<{ downloadUrl?: string; url?: string }>(res);
