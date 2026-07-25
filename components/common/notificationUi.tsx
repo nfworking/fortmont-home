@@ -28,9 +28,7 @@ import {
 import { cn } from "@/lib/utils"
 import { withBearerToken } from "@/lib/fetch-auth"
 
-// ---------- Types ----------
 
-// Matches the shape returned by GET /api/notifications/get
 interface ApiNotification {
   id: string
   type: string
@@ -41,7 +39,6 @@ interface ApiNotification {
   userId: string
 }
 
-// userId is dropped — it's always the logged-in user, nothing to render with it
 type Notification = Omit<ApiNotification, "userId">
 
 function isApiNotification(value: unknown): value is ApiNotification {
@@ -87,10 +84,7 @@ function getPatchEndpoint(notificationId: string) {
   return `${process.env.NEXT_PUBLIC_API_HOST}/api/notifications/patch/${notificationId}`
 }
 
-// ---------- Helpers ----------
 
-// `type` is a free-text field from the backend, not a fixed enum, so this is
-// a best-effort lookup with a sane fallback for anything unrecognized.
 const typeConfig: Record<
   string,
   { icon: React.ElementType; className: string }
@@ -126,8 +120,6 @@ function getTypeConfig(type: string) {
   return typeConfig[type] ?? defaultTypeConfig
 }
 
-// Renders a relative time string ("2m ago") from an ISO timestamp. Computed
-// client-side since the API only sends createdAt, not a pre-formatted label.
 function formatRelativeTime(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ""
@@ -151,7 +143,6 @@ function formatRelativeTime(iso: string): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }
 
-// ---------- Single notification item ----------
 
 function NotificationItem({
   notification,
@@ -223,7 +214,6 @@ function NotificationItem({
   )
 }
 
-// ---------- Main component ----------
 
 export function NotificationPanel() {
   const { data: session } = useSession()
@@ -232,8 +222,6 @@ export function NotificationPanel() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [hasError, setHasError] = React.useState(false)
 
-  // Tracks ids dismissed locally so a poll landing right after a dismiss
-  // doesn't bring the item back before the backend catches up.
   const dismissedIdsRef = React.useRef<Set<string>>(new Set())
 
   const fetchNotifications = React.useCallback(async () => {
@@ -273,9 +261,7 @@ export function NotificationPanel() {
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  // Optimistic: flip the UI immediately, then confirm with the backend.
-  // If the PATCH fails, the change is rolled back so the UI doesn't lie
-  // about what's actually marked read server-side.
+
   const markAsRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
@@ -305,8 +291,6 @@ export function NotificationPanel() {
     unreadIds.forEach((id) => markAsRead(id))
   }
 
-  // Optimistic local removal; swap the body for a real DELETE call once
-  // that endpoint exists, e.g. DELETE /api/notifications/:id
   const dismiss = (id: string) => {
     dismissedIdsRef.current.add(id)
     setNotifications((prev) => prev.filter((n) => n.id !== id))

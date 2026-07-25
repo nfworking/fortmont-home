@@ -163,7 +163,6 @@ export function scopesFromJson(value: unknown): string[] {
   return Array.isArray(value) ? (value as string[]) : [];
 }
 
-/** Append query params to a redirect URI that may already contain a query string. */
 export function appendQueryToUri(uri: string, params: URLSearchParams): string {
   const qs = params.toString();
   if (!qs) return uri;
@@ -182,7 +181,6 @@ export function createOAuthErrorRedirect(
   return appendQueryToUri(redirectUri, params);
 }
 
-/** S256 code_challenge = BASE64URL(SHA256(code_verifier)) */
 export function verifyPkceS256(codeVerifier: string, codeChallenge: string): boolean {
   const hash = createHash('sha256').update(codeVerifier).digest('base64url');
   return hash === codeChallenge;

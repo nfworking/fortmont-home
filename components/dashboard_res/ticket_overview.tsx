@@ -31,7 +31,7 @@ import { withBearerToken } from "@/lib/fetch-auth";
 interface TicketOverviewCardProps {
   title?: string;
   className?: string;
-  /** Where clicking through should send the user */
+
   href?: string;
 }
 

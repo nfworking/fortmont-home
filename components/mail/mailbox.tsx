@@ -177,7 +177,6 @@ export function MailboxOnboarding({
             </p>
           )}
 
-          {/* ── Step 1: Email ── */}
           {step === "email" && (
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1">
@@ -243,7 +242,6 @@ export function MailboxOnboarding({
             </div>
           )}
 
-          {/* ── Step 2: Password ── */}
           {step === "password" && (
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1">
@@ -300,7 +298,6 @@ export function MailboxOnboarding({
                   </button>
                 </div>
 
-                {/* Strength meter */}
                 <div className="flex gap-1.5 mt-0.5">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div
@@ -357,10 +354,7 @@ export function MailboxOnboarding({
                 </button>
               </div>
             </div>
-          )}
-
-          {/* ── Step 3: Done ── */}
-          {step === "done" && (
+          )}          {step === "done" && (
             <div className="flex flex-col items-center gap-5 py-2">
               <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6 text-foreground" />

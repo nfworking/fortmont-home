@@ -1,11 +1,6 @@
-import type { Prisma } from "@/app/generated/prisma/client";
 
-/**
- * The exact shape returned by the account page Prisma query.
- * All section components import `AccountUser` from here instead of
- * declaring their own interfaces — this eliminates mismatches between
- * manually-written types and what Prisma actually returns.
- */
+
+
 export type AccountUser = {
   id: string;
   username: string | null;
@@ -49,7 +44,6 @@ export type AccountUser = {
   } | null;
 };
 
-// Convenience slice types so section components only declare what they use
 export type AccountMailbox = AccountUser["mailboxes"][number];
 export type AccountDeviceToken = AccountUser["deviceTokens"][number];
 export type AccountGitHubLink = AccountUser["githubLink"][number];

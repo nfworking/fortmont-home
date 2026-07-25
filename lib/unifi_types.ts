@@ -1,12 +1,4 @@
-/**
- * Types for the UniFi Network Integration API (local, v1)
- * Docs: https://developer.ui.com/network/v10.3.58/llms.txt
- *
- * All list endpoints return: { count, data: T[], limit, offset, totalCount }
- * All detail endpoints return the resource directly.
- * Local base URL: https://<console-host>/proxy/network/integration/v1
- * Auth header:    X-API-KEY: <key>
- */
+
 
 export interface UnifiPage<T> {
   count: number;
@@ -79,7 +71,7 @@ export interface UnifiClientOverview {
   name?: string;
   connectedAt?: string;
   ipAddress?: string;
-  type?: string; // WIRED | WIRELESS | VPN
+  type?: string; 
   access?: unknown;
   macAddress?: string;
   uplinkDeviceId?: string;
@@ -89,13 +81,6 @@ export interface UnifiActionRequest {
   action: "RESTART" | "LOCATE" | "UNLOCATE" | (string & {});
 }
 
-/**
- * Legacy/local controller API (`/proxy/network/api/s/{siteName}/stat/device`).
- * Not part of the documented Integration API — undocumented and can change
- * between firmware versions — but it's the only place cumulative byte
- * counters live. Only the fields we actually use are typed; the real
- * response has far more.
- */
 export interface UnifiLegacyUplink {
   rx_bytes?: number;
   tx_bytes?: number;
@@ -122,10 +107,10 @@ export interface UnifiLegacyDevice {
   mac: string;
   name?: string;
   model?: string;
-  type?: string; // e.g. "usw" (switch), "uap" (AP), "ugw"/"udm" (gateway)
+  type?: string; 
   state?: number;
   uptime?: number;
-  tx_bytes?: number; // cumulative since last reboot, in bytes
+  tx_bytes?: number; 
   rx_bytes?: number;
   uplink?: UnifiLegacyUplink;
   "system-stats"?: { cpu?: string; mem?: string };
@@ -137,18 +122,16 @@ export interface UnifiLegacyDeviceResponse {
   data: UnifiLegacyDevice[];
 }
 
-/** Site-wide bandwidth block, sourced from the legacy stat/device endpoint. */
+
 export interface UnifiBandwidthSummary {
-  /** Available whenever the legacy endpoint responded successfully. */
   available: boolean;
   downRateMbps: number;
   upRateMbps: number;
-  /** Cumulative totals across all devices' uplink ports since their last reboot. */
+
   totalDownBytes: number;
   totalUpBytes: number;
 }
 
-/** Shape returned by our own /api/unifi aggregate endpoint */
 export interface UnifiDashboardSnapshot {
   fetchedAt: string;
   siteId: string;

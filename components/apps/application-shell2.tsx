@@ -13,16 +13,14 @@ import { withBearerToken } from "@/lib/fetch-auth";
 
 const POLL_INTERVAL = 5_000; // ms
 
-// Type definitions for the Compose API response matching backend payload
 interface ComposeApp {
   label: string;
   description: string;
   url?: string;
   icon?: string;
-  status?: "online" | "offline"; // Live response field from backend check
+  status?: "online" | "offline"; 
 }
 
-// ── Formatters ─────────────────────────────────────────────────────────────
 function fmtBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -38,7 +36,7 @@ function fmtUptime(seconds: number): string {
   return `${h}h ${m}m`;
 }
 
-// ── Glass card ─────────────────────────────────────────────────────────────
+
 function GlassCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div className={`rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur-md backdrop-saturate-150 ${className}`}>
@@ -47,7 +45,6 @@ function GlassCard({ children, className = "" }: { children: ReactNode; classNam
   );
 }
 
-// ── Stat card ──────────────────────────────────────────────────────────────
 function StatCard({ icon, label, value, sub, accent = "text-white" }: {
   icon: ReactNode; label: string; value: string; sub?: string; accent?: string;
 }) {
@@ -63,7 +60,7 @@ function StatCard({ icon, label, value, sub, accent = "text-white" }: {
   );
 }
 
-// ── Progress bar ───────────────────────────────────────────────────────────
+
 function UsageBar({ pct, colour }: { pct: number; colour: string }) {
   const clamped = Math.min(100, Math.max(0, pct));
   return (
@@ -73,7 +70,6 @@ function UsageBar({ pct, colour }: { pct: number; colour: string }) {
   );
 }
 
-// ── Node row ───────────────────────────────────────────────────────────────
 function NodeRow({ node }: { node: PveNode }) {
   const cpuPct  = node.cpu * 100;
   const memPct  = node.maxmem  > 0 ? (node.mem  / node.maxmem)  * 100 : 0;
@@ -109,7 +105,6 @@ function NodeRow({ node }: { node: PveNode }) {
   );
 }
 
-// ── Quick link ─────────────────────────────────────────────────────────────
 function QuickLink({ 
   icon, 
   label, 
@@ -126,7 +121,6 @@ function QuickLink({
   return (
     <GlassCard className="group relative flex cursor-pointer items-start gap-4 p-5 transition-all duration-200 hover:bg-white/20 hover:shadow-xl">
       
-      {/* Live Pulsing Dot Status Indicator */}
       <div className="absolute right-4 top-4 flex h-2.5 w-2.5">
         {status === "online" && (
           <>
@@ -162,7 +156,6 @@ function QuickLink({
   );
 }
 
-// ── Proxmox Polling hook ───────────────────────────────────────────────────
 function useClusterSummary() {
   const { data: session } = useSession();
   const [data,      setData]      = useState<ClusterSummary | null>(null);
@@ -174,7 +167,7 @@ function useClusterSummary() {
     setSpinning(true);
     try {
       const res = await fetch(
-        `${process.env.API_HOST}/api/proxmox/summary`,
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/proxmox/summary`,
         withBearerToken(undefined, session?.accessToken),
       );
       const json = await res.json();
@@ -198,7 +191,6 @@ function useClusterSummary() {
   return { data, error, lastFetch, spinning, refresh: fetch_ };
 }
 
-// ── Compose Apps Polling Hook ──────────────────────────────────────────────
 function useComposeApps() {
   const { data: session } = useSession();
   const [apps, setApps] = useState<ComposeApp[] | null>(null);
@@ -208,7 +200,7 @@ function useComposeApps() {
   const fetchApps = useCallback(async () => {
     try {
       const res = await fetch(
-        `${process.env.API_HOST}/api/operations/get/apps`,
+        `${process.env.NEXT_PUBLIC_API_HOST}/api/operations/get/apps`,
         withBearerToken(undefined, session?.accessToken),
       );
       const json = await res.json();
@@ -232,7 +224,6 @@ function useComposeApps() {
   return { apps, error, loading, refreshApps: fetchApps };
 }
 
-// Helper to gracefully assign UI icons depending on incoming API names
 function getAppIcon(label: string) {
   const lowerLabel = label.toLowerCase();
   if (lowerLabel.includes("registry") || lowerLabel.includes("host") || lowerLabel.includes("server")) {
@@ -253,10 +244,9 @@ function getAppIcon(label: string) {
   if (lowerLabel.includes("proxy") || lowerLabel.includes("route") || lowerLabel.includes("activity")) {
     return <Activity className="h-5 w-5" />;
   }
-  return <AppWindow className="h-5 w-5" />; // Generic default fallback
+  return <AppWindow className="h-5 w-5" />; 
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { data, error: clusterError, lastFetch, spinning, refresh: refreshCluster } = useClusterSummary();
   const { apps, error: appsError, loading: appsLoading, refreshApps } = useComposeApps();
@@ -273,7 +263,6 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-transparent px-6 py-8">
       <div className="mx-auto max-w-7xl space-y-8">
 
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Dashboard</h1>
@@ -296,7 +285,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* API errors */}
         {(clusterError || appsError) && (
           <div className="space-y-2">
             {clusterError && (
@@ -320,7 +308,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Stat grid — skeleton while loading */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
           {data ? (
             <>
@@ -343,10 +330,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Lower layout */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-          {/* Node health */}
           {data && data.nodes.length > 0 && (
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-widest text-white/40">Node health</p>
@@ -356,7 +341,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Quick links — dynamic from app compose API */}
           <div className={`space-y-3 ${data?.nodes.length ? "lg:col-span-2" : "lg:col-span-3"}`}>
             <p className="text-xs font-semibold uppercase tracking-widest text-white/40">Quick access</p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -372,7 +356,6 @@ export default function DashboardPage() {
                   />
                 ))
               ) : (
-                // Dynamic Apps Skeleton UI Loader
                 Array.from({ length: 6 }).map((_, i) => (
                   <GlassCard key={i} className="flex items-start gap-4 p-5">
                     <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-white/10" />

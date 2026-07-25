@@ -18,7 +18,7 @@ export function NavMain({
     title: string
     url: string
     icon?: React.ReactNode
-    onClick?: (e: React.MouseEvent) => void // 1. Allow the onClick handler in the TypeScript type
+    onClick?: (e: React.MouseEvent) => void 
   }[]
 }) {
   const pathname = usePathname()
@@ -33,7 +33,7 @@ export function NavMain({
                 asChild
                 tooltip={item.title}
                 isActive={pathname === item.url || pathname.startsWith(item.url + "/")}
-                onClick={item.onClick} // 2. Attach the click interceptor here
+                onClick={item.onClick} 
               >
                 <Link href={item.url}>
                   {item.icon}

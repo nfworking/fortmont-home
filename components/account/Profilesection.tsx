@@ -28,7 +28,6 @@ export function ProfileSection({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* ── Edit profile ── */}
       <SettingsSection
         tag="Profile"
         title="Public profile"
@@ -63,7 +62,6 @@ export function ProfileSection({
 
             <Separator className="opacity-50" />
 
-            {/* Editable form */}
             {user ? (
               <AccountSettingsForm
                 user={{
@@ -84,7 +82,6 @@ export function ProfileSection({
         </Card>
       </SettingsSection>
 
-      {/* ── Identity details ── */}
       <SettingsSection
         tag="Identity"
         title="Account details"

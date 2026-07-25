@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import { FileTypeIcon } from "@/components/storage/file-icon";
 import { DashboardCharts } from "@/components/storage/dashboard-charts";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { formatBytes, getFileCategory, type FileCategory } from "@/lib/storage";
 
 export const metadata: Metadata = {
@@ -19,7 +18,6 @@ export const metadata: Metadata = {
   },
 };
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface StorageFile {
   id: string;
@@ -30,7 +28,6 @@ interface StorageFile {
   owner: { id: string; username: string };
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function buildBreakdown(files: StorageFile[]) {
   const map = new Map<FileCategory, number>();
@@ -70,7 +67,6 @@ function StatCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const session = await auth();

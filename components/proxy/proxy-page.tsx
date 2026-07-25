@@ -45,7 +45,6 @@ export default function ProxyPage() {
       setApps(Array.isArray(data.apps) ? data.apps : []);
       setLastRefreshedAt(new Date());
     } catch (error) {
-      // Good practice to catch potential fetch errors
       setApps([]);
     } finally {
       setIsRefreshing(false);

@@ -46,7 +46,6 @@ interface StatusMeta {
   defaultMessage: string;
 }
 
-// ── Sample data (swap for API data later — same shape) ─────────────────────
 
 const SAMPLE_SYSTEMS: SystemStatusItem[] = [
   { id: "proxmox", name: "Proxmox Cluster", status: "operational", lastChecked: new Date().toISOString() },
@@ -57,7 +56,6 @@ const SAMPLE_SYSTEMS: SystemStatusItem[] = [
   { id: "redis", name: "Redis", status: "unknown" },
 ];
 
-// ── Status metadata ─────────────────────────────────────────────────────────
 
 const STATUS_META: Record<SystemStatusLevel, StatusMeta> = {
   operational: {
@@ -94,7 +92,6 @@ const STATUS_META: Record<SystemStatusLevel, StatusMeta> = {
 
 const STATUS_PRIORITY: SystemStatusLevel[] = ["down", "degraded", "unknown", "operational"];
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
 
 function overallStatus(systems: SystemStatusItem[]): SystemStatusLevel {
   for (const level of STATUS_PRIORITY) {
@@ -118,7 +115,6 @@ function relativeTime(iso?: string) {
   return new Date(iso).toLocaleDateString();
 }
 
-// ── Status dot (with tooltip) ────────────────────────────────────────────
 
 function StatusDot({ item }: { item: SystemStatusItem }) {
   const meta = STATUS_META[item.status];
@@ -150,7 +146,6 @@ function StatusDot({ item }: { item: SystemStatusItem }) {
   );
 }
 
-// ── Main panel ────────────────────────────────────────────────────────────
 
 export function SystemStatusPanel({
   title = "System Status",

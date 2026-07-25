@@ -7,13 +7,11 @@ export const formatBytesBigInt = (bytes?: bigint | null) => {
   let size = bytes;
   let unitIndex = 0;
 
-  // scale down while we can
   while (size >= k && unitIndex < units.length - 1) {
     size = size / k;
     unitIndex++;
   }
 
-  // convert only final value for decimal formatting
   const value = Number(size);
 
   return `${unitIndex === 0 ? value : value.toFixed(2)} ${units[unitIndex]}`;
@@ -22,7 +20,6 @@ export const formatBytesBigInt = (bytes?: bigint | null) => {
 export const getStoragePercent = (used: bigint, quota: bigint) => {
   if (quota === 0n) return 0;
 
-  // multiply first to avoid truncation
   return Number((used * 10000n) / quota) / 100;
 };
 

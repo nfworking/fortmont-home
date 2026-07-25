@@ -91,7 +91,6 @@ interface NodeStats {
   totalVms: number
 }
 
-// ── Small stat card, matching SectionCards/SystemStatusPanel language ──────
 
 function StatCard({
   icon: Icon,

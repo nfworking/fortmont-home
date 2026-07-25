@@ -108,7 +108,6 @@ export async function uploadFile(
   onStage?: (stage: UploadProgress["stage"]) => void,
   accessToken?: string,
 ): Promise<{ fileId: string }> {
-  // Step 1 — request a presigned upload URL.
   onStage?.("requesting");
   const uploadUrlRes = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/storage/upload-url`, {
     method: "POST",
@@ -125,7 +124,6 @@ export async function uploadFile(
     uploadUrlRes,
   );
 
-  // Step 2 — upload the raw bytes directly to SeaweedFS.
   onStage?.("uploading");
   const seaweedRes = await fetch(uploadData.uploadUrl, {
     method: "PUT",
@@ -137,7 +135,6 @@ export async function uploadFile(
     throw new Error(`SeaweedFS upload failed: ${seaweedRes.status}`);
   }
 
-  // Step 3 — finalize the upload.
   onStage?.("finalizing");
   const completeRes = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/storage/complete-upload`, {
     method: "POST",
@@ -171,7 +168,6 @@ export async function downloadFile(file: StorageFile, accessToken?: string): Pro
   anchor.remove();
 }
 
-// ---------- formatting helpers ----------
 
 export function formatBytes(bytes: number, decimals = 1): string {
   if (!bytes || bytes <= 0) return "0 B";

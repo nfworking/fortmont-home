@@ -34,7 +34,7 @@ interface SidebarAccount {
 
 interface AppSidebarProps {
   account: SidebarAccount | null;
-  usedBytes: number;  // Passed down as a safe number or string
+  usedBytes: number;  
   quotaBytes: number;
 }
 
@@ -82,14 +82,14 @@ export function AppSidebar({ account, usedBytes, quotaBytes }: AppSidebarProps) 
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="w-full px-2"> {/* Cleaned up width class */}
-          {/* Convert back to BigInt if your StorageWidget explicitly requires it */}
+        <div className="w-full px-2">
+        
           <StorageWidget usedBytes={BigInt(usedBytes)} quotaBytes={BigInt(quotaBytes)} />
         </div>
         <button
           className="w-full px-3 py-2 rounded-lg hover:bg-black/20 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm font-medium mb-4"
           onClick={() => {
-           window.location.href = "/dashboard";  // Navigate to dashboard
+           window.location.href = "/dashboard";  
           }}
         >
           Return to dashboard
@@ -97,7 +97,7 @@ export function AppSidebar({ account, usedBytes, quotaBytes }: AppSidebarProps) 
         <button
           className="w-full px-3 py-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm font-medium mb-4"
           onClick={() => {
-            // Handle sign out click
+           
             signOut({ callbackUrl: "/login" });
           }}
         >

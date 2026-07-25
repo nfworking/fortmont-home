@@ -1,8 +1,7 @@
 
 import { auth } from "@/lib/auth";
 import {SessionProvider} from "next-auth/react"
-import {ThemeToggle} from "@/components/common/theme-toggle";
-import { Toaster } from "@/components/ui/sonner";
+;
 
 
 export default async function DashboardLayout({

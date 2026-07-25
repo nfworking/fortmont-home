@@ -94,7 +94,6 @@ export function UnifiDashboard() {
     load();
     const interval = setInterval(() => load(siteIdRef.current), POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
   const refresh = () => startTransition(() => load(siteIdRef.current));
@@ -276,7 +275,6 @@ export function UnifiDashboard() {
   );
 }
 
-/** Formats a byte count dynamically (B/KB/MB/GB/TB). */
 function formatBytes(bytes: number): string {
   if (!bytes) return "0 B";
   if (bytes >= 1_000_000_000_000) return `${(bytes / 1_000_000_000_000).toFixed(2)} TB`;
@@ -286,7 +284,6 @@ function formatBytes(bytes: number): string {
   return `${bytes} B`;
 }
 
-/** Formats a byte rate per second to dynamic bit rate (bps/Kbps/Mbps/Gbps). */
 function formatRate(bytesPerSec: number): string {
   if (!bytesPerSec) return "0 bps";
   const bps = bytesPerSec * 8;
@@ -397,7 +394,6 @@ function ThroughputComparisonChart({
 
   const isRate = metricMode === "rate";
 
-  // Build chart data
   let chartData: any[] = [];
   if (viewMode === "devices") {
     chartData = legacyDevices.map((device) => {
@@ -511,7 +507,6 @@ function ThroughputComparisonChart({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* View mode toggle */}
           <div className="flex items-center gap-0.5 border border-border rounded-lg bg-muted/50 p-0.5">
             <button
               onClick={() => setViewMode("devices")}
@@ -537,7 +532,6 @@ function ThroughputComparisonChart({
             </button>
           </div>
 
-          {/* Metric mode toggle */}
           <div className="flex items-center gap-0.5 border border-border rounded-lg bg-muted/50 p-0.5">
             <button
               onClick={() => setMetricMode("rate")}
@@ -563,7 +557,6 @@ function ThroughputComparisonChart({
             </button>
           </div>
 
-          {/* Device selector dropdown for port view */}
           {viewMode === "ports" && devicesWithPorts.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   },
 };
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface StorageFile {
   id: string;
@@ -30,7 +29,6 @@ interface StorageFile {
   owner: { id: string; username: string };
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function buildBreakdown(files: StorageFile[]) {
   const map = new Map<FileCategory, number>();
@@ -70,7 +68,6 @@ function StatCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const session = await auth();

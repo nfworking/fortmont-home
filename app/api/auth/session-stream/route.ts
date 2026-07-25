@@ -46,7 +46,7 @@ export async function GET(request: Request) {
             controller.close();
           }
         } catch {
-          // Ignore transient database errors; the client also polls /verify-session.
+          
         }
       }, 15000);
 
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       request.signal.addEventListener("abort", abortHandler);
     },
     cancel() {
-      // The browser closed the EventSource.
+   
     },
   });
 

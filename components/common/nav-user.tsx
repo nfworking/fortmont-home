@@ -59,7 +59,6 @@ export function NavUser() {
         align="end"
         sideOffset={8}
       >
-        {/* User info header */}
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-3 px-3 py-3">
             <Avatar className="h-9 w-9 rounded-full">

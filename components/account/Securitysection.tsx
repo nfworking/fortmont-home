@@ -50,7 +50,6 @@ export default function SecuritySection() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTwoFactorStatus();
   }, [fetchTwoFactorStatus]);
 
@@ -501,7 +500,6 @@ export default function SecuritySection() {
         </Card>
       </SettingsSection>
 
-      {/* ── Danger zone ── */}
       <SettingsSection
         tag="Danger zone"
         title="Deactivate account"

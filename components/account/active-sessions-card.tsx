@@ -135,7 +135,6 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
       if (!res.ok) throw new Error("Failed to revoke other sessions");
 
       toast.success("Signed out of all other devices");
-      // Keep only current session in state
       setSessions(sessions.filter((s) => s.sessionToken === currentSessionId));
     } catch (err) {
       console.error(err);

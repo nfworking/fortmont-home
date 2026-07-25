@@ -119,7 +119,6 @@ export function ReadingPane({
               </span>
             </div>
 
-            {/* FIXED: Cleaned layout container colors */}
             <div className="flex-1 text-sm text-foreground leading-relaxed font-sans min-h-[200px]">
               {selectedEmail.body.html && typeof selectedEmail.body.html === "string" ? (
                 <div 

@@ -23,7 +23,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { TicketPriority, TicketStatus, User } from './ticket'
 
-// Define explicit types matching the dashboard business logic
 export type CreateTicketFormState = {
   type: string ;
   department: string;

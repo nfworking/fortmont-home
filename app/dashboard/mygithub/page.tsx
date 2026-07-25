@@ -64,7 +64,6 @@ interface LangStat {
   pct: number;
 }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
 
 const LANG_COLORS: Record<string, string> = {
   TypeScript: "#3178c6", JavaScript: "#f1e05a", Python: "#3572A5",
@@ -74,7 +73,6 @@ const LANG_COLORS: Record<string, string> = {
   Vue: "#41b883", Dart: "#00B4AB", "C++": "#f34b7d", C: "#555555",
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function proxyFetch<T>(path: string, accessToken?: string): Promise<T> {
   const res = await fetch(
@@ -94,7 +92,6 @@ function relativeDate(iso: string) {
   return d.toLocaleDateString("en-AU", { month: "short", day: "numeric" });
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StatCard({
   icon: Icon,
@@ -129,7 +126,6 @@ function StatCardSkeleton() {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function GitHubDashboardPage() {
   const { data: session } = useSession();
@@ -158,11 +154,9 @@ export default function GitHubDashboardPage() {
       setTotalStars(ghRepos.reduce((a, r) => a + r.stargazers_count, 0));
       setTotalForks(ghRepos.reduce((a, r) => a + r.forks_count, 0));
 
-      // Sort by stars for display
       const sorted = [...ghRepos].sort((a, b) => b.stargazers_count - a.stargazers_count);
       setRepos(sorted);
 
-      // Language stats
       const langMap: Record<string, number> = {};
       ghRepos.forEach((r) => { if (r.language) langMap[r.language] = (langMap[r.language] ?? 0) + 1; });
       const total = Object.values(langMap).reduce((a, b) => a + b, 0);
@@ -172,7 +166,6 @@ export default function GitHubDashboardPage() {
         .map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) }));
       setLangStats(langs);
 
-      // Commit history — last 30 days across top 10 repos
       const now = new Date();
       const days: CommitDay[] = Array.from({ length: 30 }, (_, i) => {
         const d = new Date(now);
@@ -230,7 +223,6 @@ export default function GitHubDashboardPage() {
   return (
     <DashboardPage className="min-h-screen">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           {loading ? (
@@ -290,7 +282,6 @@ export default function GitHubDashboardPage() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <Alert variant="destructive" className="bg-background/35 backdrop-blur-md">
           <AlertCircle className="h-4 w-4" />
@@ -298,7 +289,6 @@ export default function GitHubDashboardPage() {
         </Alert>
       )}
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
@@ -314,10 +304,8 @@ export default function GitHubDashboardPage() {
         ) : null}
       </div>
 
-      {/* Commit Chart + Languages */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* Commit Chart */}
         <Card className="lg:col-span-2 bg-background/35 backdrop-blur-md border-border/40">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -379,7 +367,6 @@ export default function GitHubDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Languages */}
         <Card className="bg-background/35 backdrop-blur-md border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -416,7 +403,6 @@ export default function GitHubDashboardPage() {
         </Card>
       </div>
 
-      {/* Repos Table */}
       <Card className="bg-background/35 backdrop-blur-md border-border/40">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">

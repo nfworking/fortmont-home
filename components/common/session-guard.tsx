@@ -4,8 +4,7 @@
 import { useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 
-// Safety net only — SSE handles the real-time path. This just covers
-// SSE reconnect gaps or proxies that silently kill idle connections.
+
 const FALLBACK_CHECK_INTERVAL = 60_000;
 
 export function SessionGuard() {
@@ -33,7 +32,6 @@ export function SessionGuard() {
           signOut({ redirectTo: "/login" });
         }
       } catch {
-        // Transient network error — don't sign the user out on a hiccup.
       }
     };
 
@@ -55,7 +53,6 @@ export function SessionGuard() {
           if (payload?.status === "connected") return;
           if (payload?.type === "revoked") verifyNow();
         } catch {
-          // ignore malformed payloads
         }
       };
 

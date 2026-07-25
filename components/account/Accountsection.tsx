@@ -27,7 +27,6 @@ export function AccountSection() {
         withBearerToken({ method: "DELETE" }, session?.accessToken),
       );
       if (res.ok) {
-        // After deletion, redirect to home or login page
         router.push("/");
       } else {
         const data = await res.json();
@@ -72,7 +71,6 @@ export function AccountSection() {
   return (
 
     <div className="flex flex-col gap-8">
-      {/* ── Preferences ── */}
       <SettingsSection
         tag="Account"
         title="Preferences"
@@ -112,7 +110,6 @@ export function AccountSection() {
         </Card>
       </SettingsSection>
 
-      {/* ── Danger zone ── */}
       <SettingsSection
         tag="Danger zone"
         title="Delete account"

@@ -97,5 +97,3 @@ export function NavUser({ user }: Props) {
   )
 }
 
-// named export only
-// named export only

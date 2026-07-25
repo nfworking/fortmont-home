@@ -48,12 +48,10 @@ useEffect(() => {
         
       </div>
 
-      {/* Usage */}
       <div className="text-sm dark:text-white text-black">
         {formatBytesBigInt(usedBytes)} / {formatBytesBigInt(quotaBytes)}
       </div>
 
-      {/* Progress bar */}
       <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
     <div
       className={`h-full transition-all ease-out duration-1000 ${barColor}`}
@@ -61,7 +59,6 @@ useEffect(() => {
     />
   </div>
 
-      {/* Status */}
       {percent >= 99 && (
         <div className="text-xs text-red-500">
           Storage full, please upgrade or delete files

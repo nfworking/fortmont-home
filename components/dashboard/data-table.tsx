@@ -118,7 +118,6 @@ interface ProxmoxResource {
   shared?: number
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatBytes(bytes: number) {
   if (bytes >= 1099511627776) return (bytes / 1099511627776).toFixed(1) + " TB"
@@ -172,7 +171,6 @@ function MiniBar({ value, max, color }: { value?: number; max?: number; color: s
 
 const POLL_INTERVAL = 15_000
 
-// ── Drag handle ────────────────────────────────────────────────────────────
 
 function DragHandle({ id }: { id: string }) {
   const { attributes, listeners } = useSortable({ id })
@@ -184,7 +182,6 @@ function DragHandle({ id }: { id: string }) {
   )
 }
 
-// ── Columns ────────────────────────────────────────────────────────────────
 
 const columns: ColumnDef<ProxmoxResource>[] = [
   {
@@ -272,7 +269,6 @@ const columns: ColumnDef<ProxmoxResource>[] = [
   },
 ]
 
-// ── Draggable row ──────────────────────────────────────────────────────────
 
 function DraggableRow({ row }: { row: Row<ProxmoxResource> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -295,7 +291,6 @@ function DraggableRow({ row }: { row: Row<ProxmoxResource> }) {
   )
 }
 
-// ── Main DataTable ─────────────────────────────────────────────────────────
 
 export function DataTable() {
   const { data: session } = useSession()
@@ -532,7 +527,6 @@ export function DataTable() {
   )
 }
 
-// ── Drawer detail view ─────────────────────────────────────────────────────
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b"]
 

@@ -1,4 +1,3 @@
-// @/components/storage/upload-dialog.tsx
 "use client";
 
 import { useRef, useState, useCallback } from "react";
@@ -43,7 +42,6 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // Track individual file stages by their index
   const [fileStages, setFileStages] = useState<Record<number, UploadProgress["stage"]>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -59,7 +57,6 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
     if (files.length === 0) return;
     setUploading(true);
 
-    // Fire off all uploads concurrently using Promise.all
     try {
       await Promise.all(
         files.map(async (file, index) => {
@@ -79,7 +76,6 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
         })
       );
 
-      // Refresh layout components silently
       router.refresh(); 
       setOpen(false);
       reset();
@@ -129,7 +125,6 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Drag & Drop Area */}
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -154,7 +149,6 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
             </div>
           </button>
 
-          {/* Files List View */}
           {files.length > 0 && (
             <div className="mt-4 space-y-3 overflow-y-auto max-h-[40vh] pr-1">
               {files.map((file, index) => {
@@ -183,7 +177,6 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
                       )}
                     </div>
 
-                    {/* Individual progress lines tracking concurrently */}
                     {currentStage && (
                       <div className="space-y-1 pt-1">
                         <Progress value={STAGE_VALUE[currentStage]} className="h-1.5" />
@@ -202,7 +195,7 @@ export function UploadDialog({ trigger }: { trigger?: React.ReactNode }) {
         <input
           ref={inputRef}
           type="file"
-          multiple // Allows multi-file selections via standard file window
+          multiple 
           className="hidden"
           onChange={(e) => {
             const selected = e.target.files ? Array.from(e.target.files) : [];

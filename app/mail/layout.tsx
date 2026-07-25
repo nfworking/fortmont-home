@@ -9,9 +9,7 @@ export default async function AppsLayout({
 
   return (
     <div className="relative min-h-screen w-full">
-      {/* Fixed background layer */}
 
-      {/* App shell sits on top */}
       <MailClient />
         
 

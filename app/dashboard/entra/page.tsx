@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { useApiData } from "@/hooks/useApiData";
 import { DashboardHero, DashboardPage } from "@/components/dashboard/page-shell";
 
-// ── Types ────────────────────────────────────────────────────────────────────
 
 interface Formatter {
   date: (v: string | number | Date | null | undefined) => string;
@@ -51,7 +50,6 @@ interface SectionHeaderProps {
   loading: boolean;
 }
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 const fmt: Formatter = {
   date: (v) => v ? new Date(v).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" }) : "—",
@@ -59,7 +57,6 @@ const fmt: Formatter = {
   bool: (v) => v === true ? "Yes" : v === false ? "No" : "—",
 };
 
-// ── Status badge ──────────────────────────────────────────────────────────────
 
 const StatusPill: React.FC<StatusPillProps> = ({ value }) => {
   const norm = String(value ?? "").toLowerCase();
@@ -94,7 +91,6 @@ const StatusPill: React.FC<StatusPillProps> = ({ value }) => {
   );
 };
 
-// ── Metric card (top row) ─────────────────────────────────────────────────────
 
 const MetricCard: React.FC<MetricCardProps> = ({ label, value, sub, trend, trendLabel, icon: Icon, iconColor }) => {
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
@@ -119,7 +115,6 @@ const MetricCard: React.FC<MetricCardProps> = ({ label, value, sub, trend, trend
   );
 };
 
-// ── Error state ───────────────────────────────────────────────────────────────
 
 const ErrorState: React.FC<{ message: string }> = ({ message }) => (
   <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm my-4">
@@ -128,7 +123,6 @@ const ErrorState: React.FC<{ message: string }> = ({ message }) => (
   </div>
 );
 
-// ── Skeleton rows ─────────────────────────────────────────────────────────────
 
 const LoadingRows: React.FC<{ cols?: number; rows?: number }> = ({ cols = 4, rows = 6 }) => (
   <>
@@ -153,7 +147,6 @@ const LoadingMetrics: React.FC<{ count?: number }> = ({ count = 4 }) => (
   </div>
 );
 
-// ── Section header ────────────────────────────────────────────────────────────
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, count, lastFetched, onRefresh, loading }) => (
   <div className="flex items-center justify-between mb-4 mt-2">
@@ -187,7 +180,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, count, lastFetched
   </div>
 );
 
-// ── Shared table wrapper ──────────────────────────────────────────────────────
+
 
 const DataTable: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="rounded-xl border border-border/60 overflow-hidden  shadow-sm">
@@ -870,9 +863,6 @@ function AzureRoles() {
   );
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// ROOT LAYOUT
-// ════════════════════════════════════════════════════════════════════════════
 
 interface TabConfig {
   value: string;

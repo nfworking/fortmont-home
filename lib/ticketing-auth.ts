@@ -1,7 +1,6 @@
 import { decode } from 'next-auth/jwt';
 import { auth } from '@/lib/auth';
 import { getOAuthBaseUrl, verifyAccessToken } from '@/lib/oauth';
-import { prisma } from '@/lib/prisma';
 
 const LEGACY_AUTH_JWT_SALT = 'authjs.session-token';
 
@@ -11,7 +10,7 @@ export type TicketingActor = {
 };
 
 async function getUserRole(userId: string): Promise<string | null> {
-  return "admin"; // Mock role
+  return "admin"; 
 }
 
 async function tryOAuthAccessToken(request: Request): Promise<TicketingActor | null> {

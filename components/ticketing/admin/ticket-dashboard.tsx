@@ -13,7 +13,7 @@ import { CreateTicketDialog, CreateTicketFormState } from "@/components/ticketin
 import { StatsCards } from './stats-cards';
 import { TicketList } from './ticket-list';
 import { TicketFilters, FilterState } from './ticket-filters';
-import { Ticket, User, Comment } from './ticket'; // 🔥 FIXED: Added explicit Comment import
+import { Ticket, User, Comment } from './ticket'; 
 import { TicketDetailSheet } from './ticket-detail-sheet';
 import { withBearerToken } from '@/lib/fetch-auth';
 
@@ -98,7 +98,6 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
   const router = useRouter();
   const pathname = usePathname();
 
-  // Listen for changes in the URL query parameters
   React.useEffect(() => {
     if (searchParams.get('new') === 'true') {
       const openTimer = window.setTimeout(() => setIsCreateDialogOpen(true), 0);

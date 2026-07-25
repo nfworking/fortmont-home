@@ -48,7 +48,7 @@ export type ClusterSummary = {
   runningVMs: number;
   totalLXC: number;
   runningLXC: number;
-  cpuUsage: number;       // avg across nodes (0–100)
+  cpuUsage: number;       
   memUsedBytes: number;
   memTotalBytes: number;
   diskUsedBytes: number;
@@ -57,4 +57,3 @@ export type ClusterSummary = {
   netOutBytes: number;
 };
 
-// ── API calls ──────────────────────────────────────────────────────────────

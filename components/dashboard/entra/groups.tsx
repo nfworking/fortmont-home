@@ -35,8 +35,6 @@ export function GroupInfoCards() {
         }
 
         const data = await res.json()
-
-        // expect array
         setUsers(Array.isArray(data) ? data : data.value ?? [])
       } catch (err: any) {
         setError(err.message)

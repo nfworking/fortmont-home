@@ -31,10 +31,9 @@ import { useTicketModal } from "@/components/dashboard_res/ticket-modal-context"
 export function CommandDemo() {
   const [open, setOpen] = React.useState(false)
   const router = useRouter()
-  const { openTicketModal } = useTicketModal() // <-- Use the global hook
+  const { openTicketModal } = useTicketModal() 
   
 
-  // Listen for the '/' keypress to trigger the modal
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (
@@ -50,7 +49,6 @@ export function CommandDemo() {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
-  // Handle routing and close the menu
   const handleNavigation = (path: string) => {
     router.push(path)
     setOpen(false)
@@ -134,10 +132,8 @@ export function CommandDemo() {
       <CommandGroup heading="Actions">
       <CommandItem 
         onSelect={() => {
-          // 1. Fire up the modal immediately on the current active page
           openTicketModal() 
           
-          // 2. Clear out the command bar menu overlay
           setOpen(false) 
         }}
       >

@@ -23,7 +23,6 @@ export function useApiData<T>(
   const [error, setError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
 
-  // Convert parameters safely to strings for URLSearchParams
   const stringParams: Record<string, string> = Object.fromEntries(
     Object.entries(params).map(([key, val]) => [key, String(val)])
   );
@@ -39,7 +38,6 @@ export function useApiData<T>(
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       
       const json = await res.json();
-      // Unwraps Microsoft Graph style objects automatically if `.value` exists
       setData(json?.value ?? json);
       setLastFetched(new Date());
     } catch (e: unknown) {

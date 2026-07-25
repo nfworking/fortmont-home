@@ -1,10 +1,7 @@
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-/**
- * Wraps a named section of the account settings page.
- * Renders an eyebrow tag, title, description, separator, then children.
- */
+
 export function SettingsSection({
   tag,
   title,
@@ -37,9 +34,7 @@ export function SettingsSection({
   );
 }
 
-/**
- * A single labelled read-only row (label left, value right).
- */
+
 export function DetailRow({
   label,
   value,
@@ -64,9 +59,7 @@ export function DetailRow({
   );
 }
 
-/**
- * Divider used between detail rows.
- */
+
 export function DetailDivider() {
   return <Separator className="opacity-30" />;
 }

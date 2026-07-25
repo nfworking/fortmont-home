@@ -1,4 +1,3 @@
-// components/storage/photo-viewer-dialog.tsx
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { X, Download, ZoomIn, ZoomOut } from "lucide-react";
@@ -8,19 +7,19 @@ import type { StorageFile } from "@/lib/storage";
 
 export function PhotoViewerDialog({ file }: { file: StorageFile }) {
   const [open, setOpen] = useState(false);
-  const [visible, setVisible] = useState(false); // controls CSS animation class
+  const [visible, setVisible] = useState(false); 
   const [zoomed, setZoomed] = useState(false);
   const { url, loading } = useSignedUrl(file.id, open);
 
   const openDialog = () => {
     setOpen(true);
-    // tiny delay so the element is mounted before we trigger the animation
+   
     requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
   };
 
   const closeDialog = () => {
-    setVisible(false); // triggers exit animation
-    // unmount after animation completes
+    setVisible(false); 
+
     setTimeout(() => {
       setOpen(false);
       setZoomed(false);
@@ -115,7 +114,6 @@ export function PhotoViewerDialog({ file }: { file: StorageFile }) {
               </div>
             </div>
 
-            {/* Image area */}
             <div
               className="relative flex items-center justify-center"
               style={{
@@ -161,7 +159,6 @@ export function PhotoViewerDialog({ file }: { file: StorageFile }) {
               )}
             </div>
 
-            {/* Footer */}
             <div
               className="flex items-center justify-between gap-3 px-4 py-3"
               style={{ borderTop: "0.5px solid rgba(255,255,255,0.07)" }}

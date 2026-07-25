@@ -1,8 +1,6 @@
 import { ApplicationShell1 } from "@/components/dashboard/application-shell1";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { DashboardBackground } from "@/components/dashboard_res/background";
-import Image from "next/image";
 import {SessionProvider} from "next-auth/react"
 import { TicketModalProvider } from "@/components/dashboard_res/ticket-modal-context";
 
@@ -53,10 +51,8 @@ export default async function DashboardLayout({
       <div className="relative min-h-screen w-full">
             <SessionProvider session={session}>
       <TicketModalProvider>
-        {/* Fixed background layer */}
         
 
-      {/* App shell sits on top */}
       <ApplicationShell1 
         user={
           user

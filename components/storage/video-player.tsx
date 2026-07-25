@@ -9,36 +9,34 @@ import type { StorageFile } from "@/lib/storage";
 export function VideoPlayerDialog({ file }: { file: StorageFile }) {
   const [open, setOpen] = useState(false);
   const { url, loading } = useSignedUrl(file.id, open);
-  const [visible, setVisible] = useState(false); // controls CSS animation class
+  const [visible, setVisible] = useState(false); 
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const openDialog = () => {
     setOpen(true);
-    // tiny delay so the element is mounted before we trigger the animation
+ 
     requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
   };
 
   const closeDialog = () => {
-    setVisible(false); // triggers exit animation
-    // unmount after animation completes
+    setVisible(false); 
+   
     setTimeout(() => {
       setOpen(false);
     }, 200);
   };
-  // Lock body scroll when open
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
-      // Pause video when closed
       videoRef.current?.pause();
     }
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -48,7 +46,6 @@ export function VideoPlayerDialog({ file }: { file: StorageFile }) {
 
   return (
     <>
-      {/* Play button overlay on the card */}
       <button
         onClick={(e) => { e.stopPropagation(); openDialog(); }}
         className="absolute inset-0 flex items-center justify-center
@@ -61,14 +58,12 @@ export function VideoPlayerDialog({ file }: { file: StorageFile }) {
         </div>
       </button>
 
-      {/* Portal-style backdrop */}
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
           style={{ background: "rgba(0,0,0,0.85)" }}
           onClick={() => closeDialog()}
         >
-          {/* Dialog panel */}
           <div
             className="relative w-full max-w-3xl"
             style={{
@@ -80,7 +75,6 @@ export function VideoPlayerDialog({ file }: { file: StorageFile }) {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
             <button
               onClick={() => closeDialog()}
               className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
@@ -90,7 +84,6 @@ export function VideoPlayerDialog({ file }: { file: StorageFile }) {
               <X className="h-4 w-4" />
             </button>
 
-            {/* Video */}
             <div className="relative w-full" style={{ background: "#000", aspectRatio: "16/9" }}>
               {loading || !url ? (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -122,7 +115,6 @@ export function VideoPlayerDialog({ file }: { file: StorageFile }) {
               )}
             </div>
 
-            {/* Footer */}
             <div
               className="flex items-center justify-between gap-3 px-4 py-3"
               style={{ borderTop: "0.5px solid rgba(255,255,255,0.07)" }}
