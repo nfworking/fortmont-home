@@ -11,9 +11,9 @@ export default function Page() {
   return (
     <DashboardPage>
       <DashboardHero
-        eyebrow="Fortmont API"
+        eyebrow="Fortmont Home"
         title="Dashboard"
-        description="A consistent overview of platform health, Proxmox resources, and resource activity."
+        description="Dashboard for your Fortmont registered services"
       />
       <div className=" gap-10 sm:flex flex-row  ">
      
@@ -23,8 +23,8 @@ export default function Page() {
       </div>
 
       <DashboardSection
-        title="Resource inventory"
-        description="Search, filter, and reorder the resources currently exposed by the API."
+        title="Infrastructure Overview"
+        description="View the status of your Fortmont registered infrastructure."
       >
         <DataTable />
       </DashboardSection>

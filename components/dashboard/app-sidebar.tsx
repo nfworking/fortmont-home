@@ -52,16 +52,6 @@ const data = {
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Server Settings",
-      url: "/dashboard/server-settings",
-      icon: <ServerIcon />,
-    },
-    {
-      title: "Site Users",
-      url: "/dashboard/users",
-      icon: <UsersIcon />,
-    },
-    {
       title: "DNS Records",
       url: "/dashboard/dns",
       icon: <GlobeLock />,
@@ -153,8 +143,8 @@ export function AppSidebar({ user, isGithubLinked = false, ...props }: AppSideba
                     <CommandIcon className="size-5 text-primary-foreground" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="text-sm font-semibold">Fortmont API</span>
-                    <span className="text-xs text-muted-foreground">Admin dashboard</span>
+                    <span className="text-sm font-semibold">Fortmont Home</span>
+                    <span className="text-xs text-muted-foreground">{user?.name}'s dashboard</span>
                   </div>
                 </Link>
               </SidebarMenuButton>

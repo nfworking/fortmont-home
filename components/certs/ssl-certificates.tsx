@@ -49,18 +49,8 @@ export default function ProxyPage() {
 
   return (
     <DashboardPage>
-      <DashboardHero
-        eyebrow="Fortmont API"
-        title="Certificate overview"
-        description="Certificates pulled from the /api/proxy/certs endpoint."
-        badge={
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            {certs.length} {certs.length === 1 ? "cert" : "certs"}
-          </span>
-        }
-      />
 
-      <DashboardSection
+      <DashboardSection className="bg-black"
         title="Certificates"
         description={lastRefreshedAt ? `Last refreshed at ${lastRefreshedAt.toLocaleTimeString()}` : "Loading certificates..."}
         actions={

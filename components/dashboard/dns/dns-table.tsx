@@ -52,27 +52,10 @@ export function DnsTable() {
   }, [loadDnsEntries]);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <section className="rounded-2xl border border-border/60 bg-background/40 p-6 shadow-sm backdrop-blur">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium uppercase tracking-[0.24em] text-muted-foreground">
-              Fortmont API
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              DNS overview
-            </h1>
-            <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-              DNS records pulled from the /api/dns endpoint.
-            </p>
-          </div>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            {dnsEntries.length} records
-          </span>
-        </div>
-      </section>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6 ">
+      
 
-      <section className="rounded-2xl border border-border/60 bg-background/40 p-6 shadow-sm backdrop-blur">
+      <section className="rounded-2xl border border-border/60 bg-black p-6 shadow-sm backdrop-blur">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold">DNS Entries</h2>

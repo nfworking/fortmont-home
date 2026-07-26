@@ -891,10 +891,10 @@ export default function EntraAzureDashboard() {
   return (
     <TooltipProvider>
       <DashboardPage className="bg-transparent">
-        <DashboardHero
-          eyebrow="Fortmont API"
+        <DashboardHero className="bg-black text-center flex items-center justify-center flex-col gap-2"  
+      
           title="Entra and Azure"
-          description="Identity and cloud inventory data surfaced from the platform APIs."
+          description="Insights into your Microsoft and Azure tenant"
         />
 
         <Tabs defaultValue="entra" className="space-y-6">

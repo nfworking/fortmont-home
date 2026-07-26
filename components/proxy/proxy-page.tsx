@@ -57,18 +57,9 @@ export default function ProxyPage() {
 
   return (
     <DashboardPage>
-      <DashboardHero
-        eyebrow="Fortmont API"
-        title="Proxy overview"
-        description="Proxy applications pulled from the /api/proxy endpoint."
-        badge={
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            {apps.length} {apps.length === 1 ? "app" : "apps"}
-          </span>
-        }
-      />
+      
 
-      <DashboardSection
+      <DashboardSection className="bg-black"
         title="Proxy apps"
         description={lastRefreshedAt ? `Last refreshed at ${lastRefreshedAt.toLocaleTimeString()}` : "Loading apps..."}
         actions={
@@ -78,7 +69,7 @@ export default function ProxyPage() {
           </Button>
         }
       >
-        <div className="overflow-x-auto rounded-xl border border-border/60 bg-background/40 backdrop-blur">
+        <div className="overflow-x-auto rounded-xl border border-border/60 bg-black backdrop-blur">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-border/60 bg-muted/50">
