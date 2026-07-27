@@ -28,7 +28,6 @@ import {
 import { cn } from "@/lib/utils"
 import { withBearerToken } from "@/lib/fetch-auth"
 
-
 interface ApiNotification {
   id: string
   type: string
@@ -42,10 +41,7 @@ interface ApiNotification {
 type Notification = Omit<ApiNotification, "userId">
 
 function isApiNotification(value: unknown): value is ApiNotification {
-  if (!value || typeof value !== "object") {
-    return false
-  }
-
+  if (!value || typeof value !== "object") return false
   const candidate = value as Partial<ApiNotification>
   return (
     typeof candidate.id === "string" &&
@@ -58,63 +54,27 @@ function isApiNotification(value: unknown): value is ApiNotification {
   )
 }
 
-function normalizeNotificationsPayload(payload: unknown): ApiNotification[] {
-  if (Array.isArray(payload)) {
-    return payload.filter(isApiNotification)
-  }
+const API_HOST = process.env.NEXT_PUBLIC_API_HOST
+const STREAM_ENDPOINT = `${API_HOST}/api/notifications/get`
+const STREAM_TOKEN_ENDPOINT = `${API_HOST}/api/notifications/stream-token`
 
-  if (payload && typeof payload === "object") {
-    const record = payload as Record<string, unknown>
-    const candidates = [record.notifications, record.items, record.data, record.results]
-
-    for (const candidate of candidates) {
-      if (Array.isArray(candidate)) {
-        return candidate.filter(isApiNotification)
-      }
-    }
-  }
-
-  return []
-}
-
-const NOTIFICATIONS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_HOST}/api/notifications/get`
-const POLL_INTERVAL_MS = 2000
+// Reconnect backoff if the stream keeps failing (e.g. server briefly down).
+const MAX_RECONNECT_DELAY_MS = 15000
+const BASE_RECONNECT_DELAY_MS = 1000
 
 function getPatchEndpoint(notificationId: string) {
-  return `${process.env.NEXT_PUBLIC_API_HOST}/api/notifications/patch/${notificationId}`
+  return `${API_HOST}/api/notifications/patch/${notificationId}`
 }
 
-
-const typeConfig: Record<
-  string,
-  { icon: React.ElementType; className: string }
-> = {
-  Infrastructure: {
-    icon: ServerCog,
-    className: "bg-blue-500/10 text-blue-400",
-  },
-  Security: {
-    icon: ShieldAlert,
-    className: "bg-red-500/10 text-red-400",
-  },
-  Mail: {
-    icon: Mail,
-    className: "bg-amber-500/10 text-amber-400",
-  },
-  Device: {
-    icon: MonitorSmartphone,
-    className: "bg-emerald-500/10 text-emerald-400",
-  },
-  Services: {
-    icon: ServerCog,
-    className: "bg-purple-500/10 text-purple-400",
-  }
+const typeConfig: Record<string, { icon: React.ElementType; className: string }> = {
+  Infrastructure: { icon: ServerCog, className: "bg-blue-500/10 text-blue-400" },
+  Security: { icon: ShieldAlert, className: "bg-red-500/10 text-red-400" },
+  Mail: { icon: Mail, className: "bg-amber-500/10 text-amber-400" },
+  Device: { icon: MonitorSmartphone, className: "bg-emerald-500/10 text-emerald-400" },
+  Services: { icon: ServerCog, className: "bg-purple-500/10 text-purple-400" },
 }
 
-const defaultTypeConfig = {
-  icon: CircleAlert,
-  className: "bg-zinc-500/10 text-zinc-400",
-}
+const defaultTypeConfig = { icon: CircleAlert, className: "bg-zinc-500/10 text-zinc-400" }
 
 function getTypeConfig(type: string) {
   return typeConfig[type] ?? defaultTypeConfig
@@ -123,26 +83,19 @@ function getTypeConfig(type: string) {
 function formatRelativeTime(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ""
-
   const diffMs = Date.now() - date.getTime()
   const diffSec = Math.round(diffMs / 1000)
-
   if (diffSec < 5) return "Just now"
   if (diffSec < 60) return `${diffSec}s ago`
-
   const diffMin = Math.round(diffSec / 60)
   if (diffMin < 60) return `${diffMin}m ago`
-
   const diffHour = Math.round(diffMin / 60)
   if (diffHour < 24) return `${diffHour}h ago`
-
   const diffDay = Math.round(diffHour / 24)
   if (diffDay === 1) return "Yesterday"
   if (diffDay < 7) return `${diffDay}d ago`
-
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }
-
 
 function NotificationItem({
   notification,
@@ -162,12 +115,7 @@ function NotificationItem({
         !notification.read && "dark:bg-black bg-white "
       )}
     >
-      <div
-        className={cn(
-          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          className
-        )}
-      >
+      <div className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full", className)}>
         <Icon className="h-4 w-4" />
       </div>
 
@@ -180,12 +128,8 @@ function NotificationItem({
             <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
           )}
         </div>
-        <p className="text-sm leading-snug text-zinc-400">
-          {notification.description}
-        </p>
-        <p className="text-xs text-zinc-500">
-          {formatRelativeTime(notification.createdAt)}
-        </p>
+        <p className="text-sm leading-snug text-zinc-400">{notification.description}</p>
+        <p className="text-xs text-zinc-500">{formatRelativeTime(notification.createdAt)}</p>
       </div>
 
       <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -214,7 +158,6 @@ function NotificationItem({
   )
 }
 
-
 export function NotificationPanel() {
   const { data: session } = useSession()
   const accessToken = session?.accessToken
@@ -223,49 +166,143 @@ export function NotificationPanel() {
   const [hasError, setHasError] = React.useState(false)
 
   const dismissedIdsRef = React.useRef<Set<string>>(new Set())
+  const esRef = React.useRef<EventSource | null>(null)
+  const reconnectTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reconnectAttemptRef = React.useRef(0)
 
-  const fetchNotifications = React.useCallback(async () => {
-    try {
-      const res = await fetch(NOTIFICATIONS_ENDPOINT, {
-        ...withBearerToken(undefined, accessToken),
-      });
+  React.useEffect(() => {
+    if (!accessToken) return
 
-      const data = normalizeNotificationsPayload(await res.json());
+    let cancelled = false
 
-      setNotifications(
-        data
-          .filter((n) => !dismissedIdsRef.current.has(n.id))
-          .map(({ userId, ...rest }) => {
+    async function connect() {
+      // Clean up any previous connection before opening a new one.
+      esRef.current?.close()
+      esRef.current = null
+
+      try {
+        const res = await fetch(STREAM_TOKEN_ENDPOINT, {
+          ...withBearerToken(undefined, accessToken),
+        })
+
+        if (!res.ok) throw new Error(`Failed to get stream token: ${res.status}`)
+
+        const { token } = await res.json()
+        if (cancelled) return
+
+        const url = new URL(STREAM_ENDPOINT)
+        url.searchParams.set("token", token)
+
+        const es = new EventSource(url.toString(), { withCredentials: true })
+        esRef.current = es
+
+        es.addEventListener("initial", (e) => {
+          try {
+            const data = JSON.parse(e.data) as ApiNotification[]
+            setNotifications(
+              data
+                .filter(isApiNotification)
+                .filter((n) => !dismissedIdsRef.current.has(n.id))
+                .map(({ userId, ...rest }) => {
+                  void userId
+                  return rest
+                })
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            )
+            setHasError(false)
+            setIsLoading(false)
+            reconnectAttemptRef.current = 0
+          } catch (err) {
+            console.error("Failed to parse initial notifications:", err)
+          }
+        })
+
+        es.addEventListener("notification", (e) => {
+          try {
+            const notification = JSON.parse(e.data) as ApiNotification
+            if (!isApiNotification(notification)) return
+            if (dismissedIdsRef.current.has(notification.id)) return
+
+            const { userId, ...rest } = notification
             void userId
-            return rest
-          })
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-      )
-      setHasError(false)
-    } catch (err) {
-      console.error("Failed to fetch notifications:", err)
-      setHasError(true)
-    } finally {
-      setIsLoading(false)
+
+            setNotifications((prev) => {
+              const withoutDupe = prev.filter((n) => n.id !== rest.id)
+              return [rest, ...withoutDupe].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              )
+            })
+          } catch (err) {
+            console.error("Failed to parse notification event:", err)
+          }
+        })
+
+        es.onopen = () => {
+          setHasError(false)
+          reconnectAttemptRef.current = 0
+        }
+
+        es.onerror = () => {
+          setHasError(true)
+
+          // The browser's built-in EventSource reconnect won't pick up
+          // a fresh stream token — if the connection closed (e.g. the
+          // 60s stream token expired, or the server dropped it), we
+          // need to fetch a new token ourselves and reconnect manually.
+          if (es.readyState === EventSource.CLOSED) {
+            es.close()
+            if (esRef.current === es) esRef.current = null
+
+            if (cancelled) return
+
+            const attempt = reconnectAttemptRef.current + 1
+            reconnectAttemptRef.current = attempt
+            const delay = Math.min(
+              BASE_RECONNECT_DELAY_MS * 2 ** (attempt - 1),
+              MAX_RECONNECT_DELAY_MS
+            )
+
+            reconnectTimeoutRef.current = setTimeout(() => {
+              if (!cancelled) connect()
+            }, delay)
+          }
+          // If readyState is CONNECTING, the browser is already retrying
+          // the same connection on its own — nothing to do here.
+        }
+      } catch (err) {
+        console.error("Failed to establish notification stream:", err)
+        setHasError(true)
+        setIsLoading(false)
+
+        if (cancelled) return
+
+        const attempt = reconnectAttemptRef.current + 1
+        reconnectAttemptRef.current = attempt
+        const delay = Math.min(
+          BASE_RECONNECT_DELAY_MS * 2 ** (attempt - 1),
+          MAX_RECONNECT_DELAY_MS
+        )
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (!cancelled) connect()
+        }, delay)
+      }
+    }
+
+    connect()
+
+    return () => {
+      cancelled = true
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+      esRef.current?.close()
+      esRef.current = null
     }
   }, [accessToken])
 
-  React.useEffect(() => {
-    fetchNotifications()
-    const interval = setInterval(fetchNotifications, POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
-  }, [fetchNotifications])
-
   const unreadCount = notifications.filter((n) => !n.read).length
 
-
   const markAsRead = async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    )
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
 
     try {
       const res = await fetch(getPatchEndpoint(id), {
@@ -275,14 +312,10 @@ export function NotificationPanel() {
         body: JSON.stringify({ read: true }),
       })
 
-      if (!res.ok) {
-        throw new Error(`Request failed with status ${res.status}`)
-      }
+      if (!res.ok) throw new Error(`Request failed with status ${res.status}`)
     } catch (err) {
       console.error(`Failed to mark notification ${id} as read:`, err)
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: false } : n))
-      )
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: false } : n)))
     }
   }
 
@@ -336,36 +369,30 @@ export function NotificationPanel() {
               <CheckCheck className="h-3.5 w-3.5" />
               Mark all read
             </Button>
-            
           )}
         </div>
         <Button
           variant="ghost"
           size="sm"
           className="h-7 gap-1 text-xs dark:text-white text-black "
-          onClick={() => window.location.href = "/admin_ticketing"} 
+          onClick={() => (window.location.href = "/admin_ticketing")}
         >
           <ArrowUpAZ className="h-3.5 w-3.5" />
           View all notifications
         </Button>
-
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center">
             <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
             <p className="text-xs text-zinc-500">Loading notifications…</p>
           </div>
-        ) : hasError ? (
+        ) : hasError && notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800">
               <WifiOff className="h-5 w-5 text-zinc-500" />
             </div>
-            <p className="text-sm font-medium text-zinc-300">
-              Couldn&apos;t load notifications
-            </p>
-            <p className="text-xs text-zinc-500">
-              We&apos;ll keep retrying automatically.
-            </p>
+            <p className="text-sm font-medium text-zinc-300">Couldn&apos;t load notifications</p>
+            <p className="text-xs text-zinc-500">We&apos;ll keep retrying automatically.</p>
           </div>
         ) : notifications.length > 0 ? (
           <ScrollArea className="h-96">
@@ -386,9 +413,7 @@ export function NotificationPanel() {
               <KeyRound className="h-5 w-5 dark:text-white bg-white dark:bg-black" />
             </div>
             <p className="text-sm font-medium dark:text-white text-black">All caught up</p>
-            <p className="text-xs text-zinc-500">
-              You have no new notifications.
-            </p>
+            <p className="text-xs text-zinc-500">You have no new notifications.</p>
           </div>
         )}
       </PopoverContent>
