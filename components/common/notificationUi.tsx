@@ -56,6 +56,11 @@ function isApiNotification(value: unknown): value is ApiNotification {
 
 const API_HOST = process.env.NEXT_PUBLIC_API_HOST
 const STREAM_ENDPOINT = `${API_HOST}/api/notifications/get`
+const STREAM_TOKEN_ENDPOINT = `${API_HOST}/api/notifications/stream-token`
+
+// Reconnect backoff if the stream keeps failing (e.g. server briefly down).
+const MAX_RECONNECT_DELAY_MS = 15000
+const BASE_RECONNECT_DELAY_MS = 1000
 
 function getPatchEndpoint(notificationId: string) {
   return `${API_HOST}/api/notifications/patch/${notificationId}`
@@ -161,68 +166,137 @@ export function NotificationPanel() {
   const [hasError, setHasError] = React.useState(false)
 
   const dismissedIdsRef = React.useRef<Set<string>>(new Set())
+  const esRef = React.useRef<EventSource | null>(null)
+  const reconnectTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reconnectAttemptRef = React.useRef(0)
 
   React.useEffect(() => {
     if (!accessToken) return
 
-    // EventSource can't set an Authorization header, so the token
-    // is passed as a query param and read server-side instead.
-    const url = new URL(STREAM_ENDPOINT)
-    url.searchParams.set("token", accessToken)
+    let cancelled = false
 
-    const es = new EventSource(url.toString(), { withCredentials: true })
+    async function connect() {
+      // Clean up any previous connection before opening a new one.
+      esRef.current?.close()
+      esRef.current = null
 
-    es.addEventListener("initial", (e) => {
       try {
-        const data = JSON.parse(e.data) as ApiNotification[]
-        setNotifications(
-          data
-            .filter(isApiNotification)
-            .filter((n) => !dismissedIdsRef.current.has(n.id))
-            .map(({ userId, ...rest }) => {
-              void userId
-              return rest
-            })
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        )
-        setHasError(false)
-        setIsLoading(false)
-      } catch (err) {
-        console.error("Failed to parse initial notifications:", err)
-      }
-    })
-
-    es.addEventListener("notification", (e) => {
-      try {
-        const notification = JSON.parse(e.data) as ApiNotification
-        if (!isApiNotification(notification)) return
-        if (dismissedIdsRef.current.has(notification.id)) return
-
-        const { userId, ...rest } = notification
-        void userId
-
-        setNotifications((prev) => {
-          const withoutDupe = prev.filter((n) => n.id !== rest.id)
-          return [rest, ...withoutDupe].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
+        const res = await fetch(STREAM_TOKEN_ENDPOINT, {
+          ...withBearerToken(undefined, accessToken),
         })
+
+        if (!res.ok) throw new Error(`Failed to get stream token: ${res.status}`)
+
+        const { token } = await res.json()
+        if (cancelled) return
+
+        const url = new URL(STREAM_ENDPOINT)
+        url.searchParams.set("token", token)
+
+        const es = new EventSource(url.toString(), { withCredentials: true })
+        esRef.current = es
+
+        es.addEventListener("initial", (e) => {
+          try {
+            const data = JSON.parse(e.data) as ApiNotification[]
+            setNotifications(
+              data
+                .filter(isApiNotification)
+                .filter((n) => !dismissedIdsRef.current.has(n.id))
+                .map(({ userId, ...rest }) => {
+                  void userId
+                  return rest
+                })
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            )
+            setHasError(false)
+            setIsLoading(false)
+            reconnectAttemptRef.current = 0
+          } catch (err) {
+            console.error("Failed to parse initial notifications:", err)
+          }
+        })
+
+        es.addEventListener("notification", (e) => {
+          try {
+            const notification = JSON.parse(e.data) as ApiNotification
+            if (!isApiNotification(notification)) return
+            if (dismissedIdsRef.current.has(notification.id)) return
+
+            const { userId, ...rest } = notification
+            void userId
+
+            setNotifications((prev) => {
+              const withoutDupe = prev.filter((n) => n.id !== rest.id)
+              return [rest, ...withoutDupe].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              )
+            })
+          } catch (err) {
+            console.error("Failed to parse notification event:", err)
+          }
+        })
+
+        es.onopen = () => {
+          setHasError(false)
+          reconnectAttemptRef.current = 0
+        }
+
+        es.onerror = () => {
+          setHasError(true)
+
+          // The browser's built-in EventSource reconnect won't pick up
+          // a fresh stream token — if the connection closed (e.g. the
+          // 60s stream token expired, or the server dropped it), we
+          // need to fetch a new token ourselves and reconnect manually.
+          if (es.readyState === EventSource.CLOSED) {
+            es.close()
+            if (esRef.current === es) esRef.current = null
+
+            if (cancelled) return
+
+            const attempt = reconnectAttemptRef.current + 1
+            reconnectAttemptRef.current = attempt
+            const delay = Math.min(
+              BASE_RECONNECT_DELAY_MS * 2 ** (attempt - 1),
+              MAX_RECONNECT_DELAY_MS
+            )
+
+            reconnectTimeoutRef.current = setTimeout(() => {
+              if (!cancelled) connect()
+            }, delay)
+          }
+          // If readyState is CONNECTING, the browser is already retrying
+          // the same connection on its own — nothing to do here.
+        }
       } catch (err) {
-        console.error("Failed to parse notification event:", err)
+        console.error("Failed to establish notification stream:", err)
+        setHasError(true)
+        setIsLoading(false)
+
+        if (cancelled) return
+
+        const attempt = reconnectAttemptRef.current + 1
+        reconnectAttemptRef.current = attempt
+        const delay = Math.min(
+          BASE_RECONNECT_DELAY_MS * 2 ** (attempt - 1),
+          MAX_RECONNECT_DELAY_MS
+        )
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (!cancelled) connect()
+        }, delay)
       }
-    })
-
-    es.onerror = () => {
-      // EventSource auto-reconnects on its own; just surface a
-      // transient error state rather than tearing anything down.
-      setHasError(true)
     }
 
-    es.onopen = () => {
-      setHasError(false)
-    }
+    connect()
 
-    return () => es.close()
+    return () => {
+      cancelled = true
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+      esRef.current?.close()
+      esRef.current = null
+    }
   }, [accessToken])
 
   const unreadCount = notifications.filter((n) => !n.read).length
@@ -312,7 +386,7 @@ export function NotificationPanel() {
             <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
             <p className="text-xs text-zinc-500">Loading notifications…</p>
           </div>
-        ) : hasError ? (
+        ) : hasError && notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800">
               <WifiOff className="h-5 w-5 text-zinc-500" />
