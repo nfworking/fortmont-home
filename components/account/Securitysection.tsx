@@ -35,7 +35,7 @@ export default function SecuritySection() {
   const [isTwoFactorVerificationPending, setIsTwoFactorVerificationPending] = useState(false);
 
   const fetchTwoFactorStatus = useCallback(async () => {
-    const response = await fetch("/api/account/2fa", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/account/2fa`, {
       ...withBearerToken(undefined, session?.accessToken),
     });
 
@@ -50,7 +50,11 @@ export default function SecuritySection() {
   }, []);
 
   useEffect(() => {
-    fetchTwoFactorStatus();
+    const timerId = window.setTimeout(() => {
+      void fetchTwoFactorStatus();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, [fetchTwoFactorStatus]);
 
   const handleTwoFactorStart = async (event: FormEvent<HTMLFormElement>) => {
