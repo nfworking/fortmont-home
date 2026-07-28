@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cicd":"pnpm prisma generate && next build",
     "docker:build": "docker build -t fortmont-home:1.88.7  .",
     "docker:tag": "docker tag fortmont-home:1.88.7 172.20.0.18:5000/fortmont-home:1.88.7",
     "docker:push": "docker push 172.20.0.18:5000/fortmont-home:1.88.7 ",

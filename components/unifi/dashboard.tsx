@@ -24,8 +24,6 @@ import {
   Power,
   Radar,
   AlertTriangle,
-  ArrowDown,
-  ArrowUp,
   Activity,
   ChevronDown,
 } from "lucide-react";
@@ -49,13 +47,6 @@ import type {
 } from "@/lib/unifi_types";
 
 const POLL_INTERVAL_MS = 30_000;
-const HISTORY_LENGTH = 20;
-
-interface BandwidthSample {
-  time: string;
-  downMbps: number;
-  upMbps: number;
-}
 
 export function UnifiDashboard() {
   const { data: session } = useSession();
@@ -88,15 +79,24 @@ export function UnifiDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [session?.accessToken]);
+  }, [session]);
 
   useEffect(() => {
-    load();
-    const interval = setInterval(() => load(siteIdRef.current), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    const initialLoadTimer = window.setTimeout(() => {
+      void load();
+    }, 0);
+    const interval = window.setInterval(() => {
+      void load(siteIdRef.current);
+    }, POLL_INTERVAL_MS);
+    return () => {
+      window.clearTimeout(initialLoadTimer);
+      window.clearInterval(interval);
+    };
   }, [load]);
 
-  const refresh = () => startTransition(() => load(siteIdRef.current));
+  const refresh = () => startTransition(() => {
+    void load(siteIdRef.current);
+  });
 
   const runAction = async (deviceId: string, action: "RESTART" | "LOCATE") => {
     const label = action === "RESTART" ? "Restarting" : "Locating";
@@ -112,7 +112,7 @@ export function UnifiDashboard() {
       {
         loading: `${label} device…`,
         success: action === "RESTART" ? "Restart sent" : "Locate LED flashing",
-        error: "Couldn't reach the device",
+        error: "Could not reach the device",
       },
     );
   };
@@ -125,7 +125,7 @@ export function UnifiDashboard() {
         <CardContent className="flex items-center gap-3 py-5">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           <div>
-            <p className="text-sm font-medium text-destructive dark:text-red-200">Couldn't load UniFi data</p>
+            <p className="text-sm font-medium text-destructive dark:text-red-200">Could not load UniFi data</p>
             <p className="text-xs text-muted-foreground">{error}</p>
           </div>
           <Button variant="outline" size="sm" className="ml-auto h-7 text-xs" onClick={refresh}>
@@ -188,7 +188,7 @@ export function UnifiDashboard() {
         <Card className="border bg-card/50 backdrop-blur-xl">
           <CardContent className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
             <Activity className="h-3.5 w-3.5" />
-            Bandwidth graph unavailable — couldn't reach the local stats endpoint
+            Bandwidth graph unavailable — could not reach the local stats endpoint
             (check <code className="text-foreground/80 dark:text-white/60">UNIFI_LEGACY_SITE_NAME</code>).
           </CardContent>
         </Card>
@@ -275,15 +275,6 @@ export function UnifiDashboard() {
   );
 }
 
-function formatBytes(bytes: number): string {
-  if (!bytes) return "0 B";
-  if (bytes >= 1_000_000_000_000) return `${(bytes / 1_000_000_000_000).toFixed(2)} TB`;
-  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(2)} GB`;
-  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
-  if (bytes >= 1_000) return `${(bytes / 1_000).toFixed(1)} KB`;
-  return `${bytes} B`;
-}
-
 function formatRate(bytesPerSec: number): string {
   if (!bytesPerSec) return "0 bps";
   const bps = bytesPerSec * 8;
@@ -367,6 +358,65 @@ function StatCard({
   );
 }
 
+interface ThroughputChartDatum {
+  name: string;
+  Download: number;
+  Upload: number;
+  rawDown: number;
+  rawUp: number;
+  up?: boolean;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: ThroughputChartDatum }>;
+  label?: string | number;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const downVal = formatRate(data.rawDown);
+    const upVal = formatRate(data.rawUp);
+
+    return (
+      <div className="border border-border bg-card/95 p-3 rounded-lg shadow-xl backdrop-blur-md">
+        <p className="text-xs font-semibold text-foreground mb-1">{label}</p>
+        {data.up !== undefined && (
+          <div className="mb-2 flex items-center gap-1.5">
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                data.up ? "bg-emerald-500" : "bg-muted-foreground/30",
+              )}
+            />
+            <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+              {data.up ? "Connected" : "Disconnected"}
+            </span>
+          </div>
+        )}
+        <div className="space-y-1 text-[11px]">
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 text-sky-500 dark:text-sky-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
+              Download
+            </span>
+            <span className="font-mono font-medium text-foreground/90">{downVal}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 text-violet-500 dark:text-violet-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-500 dark:bg-violet-400" />
+              Upload
+            </span>
+            <span className="font-mono font-medium text-foreground/90">{upVal}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
 function ThroughputComparisonChart({
   legacyDevices,
   viewMode,
@@ -394,7 +444,7 @@ function ThroughputComparisonChart({
 
   const isRate = metricMode === "rate";
 
-  let chartData: any[] = [];
+  let chartData: ThroughputChartDatum[] = [];
   if (viewMode === "devices") {
     chartData = legacyDevices.map((device) => {
       const downRate =
@@ -440,50 +490,6 @@ function ThroughputComparisonChart({
       };
     });
   }
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const downVal = isRate ? formatRate(data.rawDown) : formatBytes(data.rawDown);
-      const upVal = isRate ? formatRate(data.rawUp) : formatBytes(data.rawUp);
-
-      return (
-        <div className="border border-border bg-card/95 p-3 rounded-lg shadow-xl backdrop-blur-md">
-          <p className="text-xs font-semibold text-foreground mb-1">{label}</p>
-          {data.hasOwnProperty("up") && (
-            <div className="mb-2 flex items-center gap-1.5">
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  data.up ? "bg-emerald-500" : "bg-muted-foreground/30",
-                )}
-              />
-              <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
-                {data.up ? "Connected" : "Disconnected"}
-              </span>
-            </div>
-          )}
-          <div className="space-y-1 text-[11px]">
-            <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 text-sky-500 dark:text-sky-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
-                Download
-              </span>
-              <span className="font-mono font-medium text-foreground/90">{downVal}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 text-violet-500 dark:text-violet-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-500 dark:bg-violet-400" />
-                Upload
-              </span>
-              <span className="font-mono font-medium text-foreground/90">{upVal}</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const hasNoData = chartData.length === 0;
 

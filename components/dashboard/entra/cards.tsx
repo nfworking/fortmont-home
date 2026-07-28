@@ -42,8 +42,8 @@ export function UserInfoCards() {
         const data = await res.json()
 
         setUsers(Array.isArray(data) ? data : data.value ?? [])
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to fetch users")
       } finally {
         setLoading(false)
       }

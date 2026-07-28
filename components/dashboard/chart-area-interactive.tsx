@@ -121,6 +121,7 @@ function StatCard({
 
 export function ChartAreaInteractive() {
   const { data: session } = useSession()
+  const accessToken = session?.accessToken
   const [netHistory, setNetHistory] = React.useState<TimePoint[]>([])
   const [vmNames, setVmNames] = React.useState<string[]>([])
   const [nodeStats, setNodeStats] = React.useState<NodeStats | null>(null)
@@ -131,11 +132,13 @@ export function ChartAreaInteractive() {
   const prevTimeRef = React.useRef<number>(0)
 
   const fetchAndAppend = React.useCallback(async (manual = false) => {
-    if (manual) setRefreshing(true)
+    if (manual) {
+      setRefreshing(true)
+    }
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_HOST}/api/proxmox/resources`,
-        withBearerToken(undefined, session?.accessToken),
+        withBearerToken(undefined, accessToken),
       )
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
@@ -202,12 +205,19 @@ export function ChartAreaInteractive() {
     } finally {
       if (manual) setRefreshing(false)
     }
-  }, [session?.accessToken])
+  }, [session])
 
   React.useEffect(() => {
-    fetchAndAppend()
-    const id = setInterval(fetchAndAppend, POLL_INTERVAL)
-    return () => clearInterval(id)
+    const timerId = window.setTimeout(() => {
+      void fetchAndAppend()
+    }, 0)
+    const id = window.setInterval(() => {
+      void fetchAndAppend()
+    }, POLL_INTERVAL)
+    return () => {
+      window.clearTimeout(timerId)
+      window.clearInterval(id)
+    }
   }, [fetchAndAppend])
 
   const netConfig = React.useMemo(() => {

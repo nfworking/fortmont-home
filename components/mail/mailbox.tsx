@@ -184,7 +184,7 @@ export function MailboxOnboarding({
                   Mailbox setup
                 </p>
                 <h1 className="text-xl font-semibold text-foreground leading-snug">
-                  What's your email?
+                  What&apos;s your email?
                 </h1>
               </div>
 
@@ -365,7 +365,7 @@ export function MailboxOnboarding({
                   Mailbox ready
                 </h1>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Your mailbox has been configured. You're all set to start
+                  Your mailbox has been configured. You&apos;re all set to start
                   sending and receiving mail.
                 </p>
               </div>

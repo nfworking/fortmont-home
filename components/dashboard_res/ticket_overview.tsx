@@ -45,6 +45,7 @@ export function TicketOverviewCard({
   href = "/admin_ticketing/dashboard",
 }: TicketOverviewCardProps) {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +55,7 @@ export function TicketOverviewCard({
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/get/ticket`, {
         cache: "no-store",
-        ...withBearerToken(undefined, session?.accessToken),
+        ...withBearerToken(undefined, accessToken),
       });
 
       if (!res.ok) {
@@ -72,10 +73,14 @@ export function TicketOverviewCard({
     } finally {
       setLoading(false);
     }
-  }, [session?.accessToken]);
+  }, [accessToken]);
 
   useEffect(() => {
-    load();
+    const timerId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, [load]);
 
   const open = tickets.filter((t) => normalizeStatus(t.status) === "open").length;

@@ -93,7 +93,7 @@ const deleteFile = async (fileId: string, accessToken?: string) => {
     if (!res.ok) {
       throw new Error("Failed to delete file");
     }
-  }).catch((error) => {
+  }).catch(() => {
     toast.error("Failed to delete file", {
       description: "An error occurred while trying to delete the file.",
     });
@@ -310,7 +310,7 @@ export function FileBrowser({
 
       {error ? (
         <div className="rounded-lg border border-dashed py-16 text-center">
-          <p className="text-sm font-medium">Couldn't load your files</p>
+          <p className="text-sm font-medium">Could not load your files</p>
           <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
         </div>
       ) : isLoading ? (

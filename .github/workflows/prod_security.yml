@@ -29,6 +29,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Auditor
+      - name: Run Audits
         run: pnpm audit
         continue-on-error: true

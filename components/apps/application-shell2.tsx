@@ -158,6 +158,7 @@ function QuickLink({
 
 function useClusterSummary() {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [data,      setData]      = useState<ClusterSummary | null>(null);
   const [error,     setError]     = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
@@ -168,7 +169,7 @@ function useClusterSummary() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_HOST}/api/proxmox/summary`,
-        withBearerToken(undefined, session?.accessToken),
+        withBearerToken(undefined, accessToken),
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Request failed");
@@ -183,9 +184,16 @@ function useClusterSummary() {
   }, [session?.accessToken]);
 
   useEffect(() => {
-    fetch_();
-    const id = setInterval(fetch_, POLL_INTERVAL);
-    return () => clearInterval(id);
+    const timerId = window.setTimeout(() => {
+      void fetch_();
+    }, 0);
+    const id = window.setInterval(() => {
+      void fetch_();
+    }, POLL_INTERVAL);
+    return () => {
+      window.clearTimeout(timerId);
+      window.clearInterval(id);
+    };
   }, [fetch_]);
 
   return { data, error, lastFetch, spinning, refresh: fetch_ };
@@ -193,6 +201,7 @@ function useClusterSummary() {
 
 function useComposeApps() {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [apps, setApps] = useState<ComposeApp[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -201,7 +210,7 @@ function useComposeApps() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_HOST}/api/operations/get/apps`,
-        withBearerToken(undefined, session?.accessToken),
+        withBearerToken(undefined, accessToken),
       );
       const json = await res.json();
       
@@ -216,9 +225,16 @@ function useComposeApps() {
   }, [session?.accessToken]);
 
   useEffect(() => {
-    fetchApps();
-    const id = setInterval(fetchApps, POLL_INTERVAL);
-    return () => clearInterval(id);
+    const timerId = window.setTimeout(() => {
+      void fetchApps();
+    }, 0);
+    const id = window.setInterval(() => {
+      void fetchApps();
+    }, POLL_INTERVAL);
+    return () => {
+      window.clearTimeout(timerId);
+      window.clearInterval(id);
+    };
   }, [fetchApps]);
 
   return { apps, error, loading, refreshApps: fetchApps };

@@ -15,6 +15,7 @@ export function DnsTable() {
   const [dnsEntries, setDnsEntries] = useState<DnsRecord[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -23,7 +24,7 @@ export function DnsTable() {
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_HOST ?? "";
-      const res = await fetch(`${apiBase}/api/dns`, withBearerToken(undefined, session?.accessToken));
+      const res = await fetch(`${apiBase}/api/dns`, withBearerToken(undefined, accessToken));
 
       if (!res.ok) {
         setDnsEntries([]);
@@ -39,16 +40,21 @@ export function DnsTable() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [session?.accessToken]);
+  }, [accessToken]);
 
   useEffect(() => {
-    void loadDnsEntries();
+    const timerId = window.setTimeout(() => {
+      void loadDnsEntries();
+    }, 0);
 
     const intervalId = window.setInterval(() => {
       void loadDnsEntries();
     }, 60000);
 
-    return () => window.clearInterval(intervalId);
+    return () => {
+      window.clearTimeout(timerId);
+      window.clearInterval(intervalId);
+    };
   }, [loadDnsEntries]);
 
   return (

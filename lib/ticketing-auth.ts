@@ -9,7 +9,7 @@ export type TicketingActor = {
   userRole: string | null;
 };
 
-async function getUserRole(userId: string): Promise<string | null> {
+async function getUserRole(): Promise<string | null> {
   return "admin"; 
 }
 
@@ -28,7 +28,7 @@ async function tryOAuthAccessToken(request: Request): Promise<TicketingActor | n
 
     return {
       userId: payload.sub,
-      userRole: await getUserRole(payload.sub),
+      userRole: await getUserRole(),
     };
   } catch {
     return null;
@@ -59,7 +59,7 @@ async function tryLegacyBearerToken(request: Request): Promise<TicketingActor | 
 
     return {
       userId: decoded.sub,
-      userRole: (decoded as { role?: string }).role ?? (await getUserRole(decoded.sub)),
+      userRole: (decoded as { role?: string }).role ?? (await getUserRole()),
     };
   } catch {
     return null;
@@ -75,7 +75,7 @@ async function tryCookieSession(): Promise<TicketingActor | null> {
   return {
     userId: session.user.id,
     userRole:
-      (session.user as { role?: string | null }).role ?? (await getUserRole(session.user.id)),
+      (session.user as { role?: string | null }).role ?? (await getUserRole()),
   };
 }
 

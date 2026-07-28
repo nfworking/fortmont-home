@@ -401,10 +401,10 @@ interface EntraApp {
 
 function EntraApps() {
   const { data, loading, error, lastFetched, refresh } = useApiData<EntraApp[]>(`${process.env.NEXT_PUBLIC_API_HOST}/api/entra`, { resource: "applications" });
+  const [now] = React.useState(() => Date.now());
   const apps = Array.isArray(data) ? data : [];
   const withCreds = apps.filter(a => (a.passwordCredentials?.length ?? 0) + (a.keyCredentials?.length ?? 0) > 0).length;
   const expiringSoon = apps.filter(a => {
-    const now = Date.now();
     const soon = now + 30 * 24 * 60 * 60 * 1000;
     return [...(a.passwordCredentials ?? []), ...(a.keyCredentials ?? [])].some(c => {
       const exp = new Date(c.endDateTime).getTime();

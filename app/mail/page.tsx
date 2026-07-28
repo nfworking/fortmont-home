@@ -66,13 +66,18 @@ export default function MailClient() {
 
   useEffect(() => {
     if (!selectedEmail) return
-    const contact = getEmailContact(selectedEmail, activeFolder)
-    setReplyTo(extractEmail(contact))
-    setReplySubject(`Re: ${selectedEmail.subject}`)
-    setReplyBody("")
-    setSendError(null)
-    setSendSuccess(false)
-    setMuteThread(false)
+
+    const timerId = window.setTimeout(() => {
+      const contact = getEmailContact(selectedEmail, activeFolder)
+      setReplyTo(extractEmail(contact))
+      setReplySubject(`Re: ${selectedEmail.subject}`)
+      setReplyBody("")
+      setSendError(null)
+      setSendSuccess(false)
+      setMuteThread(false)
+    }, 0)
+
+    return () => window.clearTimeout(timerId)
   }, [selectedEmail, activeFolder])
 
   async function fetchEmails(folder: FolderType) {

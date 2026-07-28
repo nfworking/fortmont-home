@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
-  GitCommit, GitFork, Star, Users, Calendar, BookOpen,
+  GitCommit, GitFork, Star, Calendar, BookOpen,
   Code2, RefreshCw, AlertCircle, CheckCircle2, Loader2,
   ExternalLink, GitBranch, Lock, GitMerge,
   AlertTriangle,
@@ -129,6 +129,7 @@ function StatCardSkeleton() {
 
 export default function GitHubDashboardPage() {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [commitData, setCommitData] = useState<CommitDay[]>([]);
@@ -146,8 +147,8 @@ export default function GitHubDashboardPage() {
     setError(null);
     try {
       const [ghUser, ghRepos] = await Promise.all([
-        proxyFetch<GitHubUser>("user", session?.accessToken),
-        proxyFetch<GitHubRepo[]>("user/repos?per_page=100&sort=pushed&affiliation=owner", session?.accessToken),
+        proxyFetch<GitHubUser>("user", accessToken),
+        proxyFetch<GitHubRepo[]>("user/repos?per_page=100&sort=pushed&affiliation=owner", accessToken),
       ]);
 
       setUser(ghUser);
@@ -213,9 +214,15 @@ export default function GitHubDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [session?.accessToken]);
+  }, [accessToken]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, [load]);
 
   const memberYear = user ? new Date(user.created_at).getFullYear() : null;
   const memberAge = memberYear ? new Date().getFullYear() - memberYear : null;

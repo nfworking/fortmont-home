@@ -11,7 +11,6 @@ import { Copy, Plus, Trash2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { withBearerToken } from "@/lib/fetch-auth";
-import { headers } from "next/dist/server/request/headers";
 
 type PlatformApiKey = {
   id: string;
@@ -79,7 +78,11 @@ export function PlatformApiKeysSection() {
   };
 
   useEffect(() => {
-    loadKeys();
+    const timerId = window.setTimeout(() => {
+      void loadKeys();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, []);
 
   const toggleScope = (scope: string) => {
