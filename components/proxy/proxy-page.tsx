@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { RefreshCwIcon } from "lucide-react";
 
-import { DashboardHero, DashboardPage, DashboardSection } from "@/components/dashboard/page-shell";
+import { DashboardPage, DashboardSection } from "@/components/dashboard/page-shell";
 import { Button } from "@/components/ui/button";
 import { withBearerToken } from "@/lib/fetch-auth";
 
@@ -23,6 +23,7 @@ type ProxyApiResponse = {
 
 export default function ProxyPage() {
   const { data: session } = useSession();
+  const accessToken = session?.accessToken;
   const [apps, setApps] = useState<ProxyApp[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
@@ -33,7 +34,7 @@ export default function ProxyPage() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_HOST}/api/proxy/routes`,
-        withBearerToken(undefined, session?.accessToken),
+        withBearerToken(undefined, accessToken),
       );
 
       if (!res.ok) {
@@ -44,15 +45,19 @@ export default function ProxyPage() {
       const data = (await res.json()) as ProxyApiResponse;
       setApps(Array.isArray(data.apps) ? data.apps : []);
       setLastRefreshedAt(new Date());
-    } catch (error) {
+    } catch {
       setApps([]);
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
-    void loadProxyApps();
+    const timerId = window.setTimeout(() => {
+      void loadProxyApps();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, [loadProxyApps]);
 
   return (

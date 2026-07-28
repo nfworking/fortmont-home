@@ -536,16 +536,21 @@ function TableCellViewer({ item }: { item: ProxmoxResource }) {
 
   React.useEffect(() => {
     if (!item.maxmem) return
-    const point = {
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-      cpu: parseFloat(((item.cpu ?? 0) * 100).toFixed(1)),
-      mem: pct(item.mem, item.maxmem),
-      disk: pct(item.disk, item.maxdisk),
-    }
-    setHistory((prev) => {
-      const next = [...prev, point]
-      return next.length > 20 ? next.slice(-20) : next
-    })
+
+    const timerId = window.setTimeout(() => {
+      const point = {
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        cpu: parseFloat(((item.cpu ?? 0) * 100).toFixed(1)),
+        mem: pct(item.mem, item.maxmem),
+        disk: pct(item.disk, item.maxdisk),
+      }
+      setHistory((prev) => {
+        const next = [...prev, point]
+        return next.length > 20 ? next.slice(-20) : next
+      })
+    }, 0)
+
+    return () => window.clearTimeout(timerId)
   }, [item])
 
   const chartConfig: ChartConfig = {

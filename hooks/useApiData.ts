@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
 import { withBearerToken } from "@/lib/fetch-auth";
@@ -30,30 +30,45 @@ export function useApiData<T>(
   const query = new URLSearchParams(stringParams).toString();
   const url = `${endpoint}${query ? `?${query}` : ""}`;
 
-  const doFetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(url, withBearerToken(undefined, session?.accessToken));
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      
-      const json = await res.json();
-      setData(json?.value ?? json);
-      setLastFetched(new Date());
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError("An unknown error occurred");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [session?.accessToken, url]);
-
   useEffect(() => {
-    doFetch();
-  }, [doFetch]);
+    let isActive = true;
+
+    const timeoutId = window.setTimeout(() => {
+      const doFetch = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const res = await fetch(url, withBearerToken(undefined, session?.accessToken));
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+
+          const json = await res.json();
+          if (!isActive) return;
+
+          setData(json?.value ?? json);
+          setLastFetched(new Date());
+        } catch (e: unknown) {
+          if (!isActive) return;
+
+          if (e instanceof Error) {
+            setError(e.message);
+          } else {
+            setError("An unknown error occurred");
+          }
+        } finally {
+          if (isActive) {
+            setLoading(false);
+          }
+        }
+      };
+
+      void doFetch();
+    }, 0);
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [session?.accessToken, url]);
 
   return { data, loading, error, lastFetched, refresh: doFetch };
 }

@@ -44,7 +44,11 @@ export default function ProxyPage() {
   }, []);
 
   useEffect(() => {
-    void loadCerts();
+    const timerId = window.setTimeout(() => {
+      void loadCerts();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, [loadCerts]);
 
   return (

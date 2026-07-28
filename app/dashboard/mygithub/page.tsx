@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
-  GitCommit, GitFork, Star, Users, Calendar, BookOpen,
+  GitCommit, GitFork, Star, Calendar, BookOpen,
   Code2, RefreshCw, AlertCircle, CheckCircle2, Loader2,
   ExternalLink, GitBranch, Lock, GitMerge,
   AlertTriangle,

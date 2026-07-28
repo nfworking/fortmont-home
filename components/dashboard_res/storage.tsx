@@ -10,6 +10,15 @@ type Props = {
 };
 
 export function StorageWidget({ usedBytes, quotaBytes }: Props) {
+  const [animatedWidth, setAnimatedWidth] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimatedWidth(Math.min(percent, 100));
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [percent]);
 
   if (usedBytes == null || quotaBytes == null) {
     return (
@@ -23,17 +32,6 @@ export function StorageWidget({ usedBytes, quotaBytes }: Props) {
   const percent = getStoragePercent(usedBytes, quotaBytes);
   const barColor = getStorageColor(percent);
 
-  const [animatedWidth, setAnimatedWidth] = useState(0);
-
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setAnimatedWidth(Math.min(percent, 100));
-  }, 50); 
-
-  return () => clearTimeout(timer);
-}, [percent]); 
-
-  return (
     <div className="rounded-xl border p-4 space-y-3 transition-all duration-500">
       {/* Header */}
       <div className="flex items-center justify-between">

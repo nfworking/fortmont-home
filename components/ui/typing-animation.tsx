@@ -106,10 +106,14 @@ export function TypingAnimation({
   )
 
   useEffect(() => {
-    setDisplayedText("")
-    setCurrentWordIndex(0)
-    setCurrentCharIndex(0)
-    setPhase("typing")
+    const timerId = window.setTimeout(() => {
+      setDisplayedText("")
+      setCurrentWordIndex(0)
+      setCurrentCharIndex(0)
+      setPhase("typing")
+    }, 0)
+
+    return () => window.clearTimeout(timerId)
   }, [animationSourceKey])
 
   useEffect(() => {

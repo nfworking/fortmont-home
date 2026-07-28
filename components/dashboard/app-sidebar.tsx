@@ -116,7 +116,7 @@ export function AppSidebar({ user, isGithubLinked = false, ...props }: AppSideba
 
 
   const modifiedNavMain = data.navMain.map((item) => {
-    const hasGithub = isGithubLinked || (user as any)?.isGithubLinked || (user as any)?.githubLinked;
+    const hasGithub = isGithubLinked || (user as { isGithubLinked?: boolean | null; githubLinked?: boolean | null } | null)?.isGithubLinked || (user as { isGithubLinked?: boolean | null; githubLinked?: boolean | null } | null)?.githubLinked;
 
   
     if (item.requiresGithub && !hasGithub) {
@@ -144,7 +144,7 @@ export function AppSidebar({ user, isGithubLinked = false, ...props }: AppSideba
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="text-sm font-semibold">Fortmont Home</span>
-                    <span className="text-xs text-muted-foreground">{user?.name}'s dashboard</span>
+                    <span className="text-xs text-muted-foreground">{user?.name}&apos;s dashboard</span>
                   </div>
                 </Link>
               </SidebarMenuButton>

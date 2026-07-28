@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,6 @@ import { Laptop, Smartphone, Globe, Trash2, Loader2, ShieldAlert } from "lucide-
 import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { withBearerToken } from "@/lib/fetch-auth";
-import { usePathname, useSearchParams } from 'next/navigation';
 
 interface SessionData {
   id: string;
@@ -71,10 +70,12 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokingOthers, setRevokingOthers] = useState(false);
   const session = useSession();
-  const fetchSessions = async () => {
+  const accessToken = session.data?.accessToken;
+
+  const fetchSessions = useCallback(async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/auth/sessions`, {
-        ...withBearerToken(undefined, session.data?.accessToken),
+        ...withBearerToken(undefined, accessToken),
       });
       if (!res.ok) throw new Error("Failed to fetch sessions");
       const data = await res.json();
@@ -85,11 +86,15 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken]);
 
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    const timerId = window.setTimeout(() => {
+      void fetchSessions();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, [fetchSessions]);
 
   const handleRevoke = async (sessionToken: string) => {
     const isCurrent = sessionToken === currentSessionId;
