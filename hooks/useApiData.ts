@@ -58,7 +58,7 @@ export function useApiData<T>(
         setLoading(false);
       }
     }
-  }, [session?.accessToken, url]);
+  }, [session, url]);
 
   useEffect(() => {
     isActiveRef.current = true;
