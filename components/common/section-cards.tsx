@@ -91,11 +91,11 @@ export function SectionCards({ title = "Proxmox Resources", className }: Section
   ];
 
   return (
-    <Card className={cn("w-full max-w-sm border-border/60 bg-card/90 shadow-sm backdrop-blur-sm", className)}>
+    <Card className={cn("w-full max-w-sm border-border/60 bg-background/80 shadow-sm backdrop-blur-sm", className)}>
       <CardHeader>
         <div className="flex items-center gap-2">
           <Server className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <CardTitle className="text-40px font-medium">{title}</CardTitle>
         </div>
         <CardDescription className="text-xs">
           {loading

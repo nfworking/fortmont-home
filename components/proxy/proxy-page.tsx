@@ -64,7 +64,7 @@ export default function ProxyPage() {
     <DashboardPage>
       
 
-      <DashboardSection className="bg-black"
+      <DashboardSection className="dark:bg-background/80 backdrop-blur-sm "
         title="Proxy apps"
         description={lastRefreshedAt ? `Last refreshed at ${lastRefreshedAt.toLocaleTimeString()}` : "Loading apps..."}
         actions={
@@ -74,7 +74,7 @@ export default function ProxyPage() {
           </Button>
         }
       >
-        <div className="overflow-x-auto rounded-xl border border-border/60 bg-black backdrop-blur">
+        <div className="overflow-x-auto rounded-xl border border-border/60 dark:bg-background/80 ">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-border/60 bg-muted/50">

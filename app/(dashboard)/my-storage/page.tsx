@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { fetchAccount } from "@/lib/storage";
-import { AppShell } from "@/components/storage/app-shell";
 import { FileBrowser } from "@/components/storage/file-browser";
+import { UploadDialog } from "@/components/storage/upload-dialog";
 
 type StorageSession = {
   user?: {
@@ -14,11 +14,7 @@ type StorageSession = {
 
 export const metadata: Metadata = {
   title: "Files — Vault",
-  description: "Browse, search, upload, and download your stored files in one clean black & white workspace.",
-  openGraph: {
-    title: "Files — Vault",
-    description: "Your modern cloud storage workspace.",
-  },
+  description: "Browse, search, upload, and download your stored files in one clean workspace.",
 };
 
 export default async function FilesPage() {
@@ -31,12 +27,22 @@ export default async function FilesPage() {
     : null;
 
   return (
-    <AppShell title="Files" account={account}>
+    <div className="flex flex-col gap-6 p-6">
+      <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-4">
+        <div>
+          <h1 className="text-xl font-semibold text-white">Files — Vault</h1>
+          <p className="text-xs text-[#888888]">
+            Browse, search, and manage your cloud workspace files.
+          </p>
+        </div>
+        <UploadDialog />
+      </div>
+
       <FileBrowser
         files={account?.files ?? []}
         isLoading={false}
         error={null}
       />
-    </AppShell>
+    </div>
   );
 }

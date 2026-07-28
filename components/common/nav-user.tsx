@@ -55,7 +55,7 @@ export function NavUser() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-56 rounded-xl border dark:bg-black bg-white border-border/50 shadow-lg"
+        className="w-56 rounded-xl border dark:bg-background/80 backdrop-blur-sm bg-white border-border/50 shadow-lg"
         align="end"
         sideOffset={8}
       >
