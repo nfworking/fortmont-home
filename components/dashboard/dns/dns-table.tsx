@@ -61,7 +61,7 @@ export function DnsTable() {
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6 ">
       
 
-      <section className="rounded-2xl border border-border/60 bg-black p-6 shadow-sm backdrop-blur">
+      <section className="rounded-2xl border border-border/60 dark:bg-background/80 bg-white p-6 shadow-sm backdrop-blur">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold">DNS Entries</h2>

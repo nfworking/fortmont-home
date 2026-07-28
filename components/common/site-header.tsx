@@ -21,7 +21,6 @@ export function SiteHeader({ title = "LXC and registry information" }: SiteHeade
         </div>
 
         <div className="flex flex-1 justify-center">
-          <CommandDemo />
         </div>
 
         <div className="flex items-center gap-2">

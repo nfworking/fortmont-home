@@ -54,7 +54,7 @@ export default function ProxyPage() {
   return (
     <DashboardPage>
 
-      <DashboardSection className="bg-black"
+      <DashboardSection className="dark:bg-background/80 backdrop-blur-sm "
         title="Certificates"
         description={lastRefreshedAt ? `Last refreshed at ${lastRefreshedAt.toLocaleTimeString()}` : "Loading certificates..."}
         actions={

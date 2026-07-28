@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
 type ApplicationShell1Props = {
   className?: string;
   children: ReactNode;
+  storageUsage?: {
+    usedFormatted: string;
+    quotaFormatted: string;
+    percentage: number;
+  };
   user?: {
     name?: string | null;
     email?: string | null;
@@ -38,7 +43,7 @@ function getDashboardTitle(pathname: string) {
   return match?.title ?? "Dashboard";
 }
 
-export function ApplicationShell1({ className, children, user }: ApplicationShell1Props) {
+export function ApplicationShell1({ className, children, user, storageUsage }: ApplicationShell1Props) {
   const pathname = usePathname();
   const title = getDashboardTitle(pathname);
 
@@ -52,7 +57,7 @@ export function ApplicationShell1({ className, children, user }: ApplicationShel
         } as CSSProperties
       }
     >
-      <AppSidebar variant="inset" user={user ?? null} className="bg-background text-foreground" />
+      <AppSidebar variant="inset" user={user ?? null} storageUsage={storageUsage} className="bg-background text-foreground" />
       <SidebarInset className="bg-background text-foreground">
         <SiteHeader title={title} />
         {children}

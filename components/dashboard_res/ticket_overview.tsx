@@ -109,7 +109,7 @@ export function TicketOverviewCard({
   ];
 
   return (
-    <Card className={cn("w-full max-w-sm border-border/60 bg-card/90 shadow-sm backdrop-blur-sm", className)}>
+    <Card className={cn("w-full max-w-sm border-border/60 bg-background/80 shadow-sm backdrop-blur-sm", className)}>
       <CardHeader>
         <div className="flex items-center gap-2">
           <TicketIcon className="size-4 text-muted-foreground" />

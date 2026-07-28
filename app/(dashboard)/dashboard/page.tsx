@@ -10,7 +10,7 @@ import TicketOverviewCard from "@/components/dashboard_res/ticket_overview";
 export default function Page() {
   return (
     <DashboardPage>
-      <DashboardHero
+      <DashboardHero className="bg-background/80 backdrop-blur-sm"
         eyebrow="Fortmont Home"
         title="Dashboard"
         description="Dashboard for your Fortmont registered services"
@@ -22,7 +22,7 @@ export default function Page() {
        <TicketOverviewCard />
       </div>
 
-      <DashboardSection
+      <DashboardSection className="bg-background/80 backdrop-blur-sm"
         title="Infrastructure Overview"
         description="View the status of your Fortmont registered infrastructure."
       >
