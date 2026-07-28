@@ -1,12 +1,13 @@
-name: Dev Lint
+name: Pull Request Checks
 
 on:
-  push:
+  pull_request:
     branches:
-      - 'feature/**'
+      - main
 
 jobs:
-  lint:
+  test:
+    name: PR Validation
     runs-on: self-hosted
 
     steps:
@@ -21,10 +22,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-         
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run linter
+      - name: Run Linter
         run: pnpm lint
+
+      - name: Run build
+        run: pnpm build:cicd
+
+      - name: Security scans
+        run: pnpm audit
+        continue-on-error: true

@@ -1,14 +1,16 @@
-name: Dev Lint
+name: Dev Build
 
 on:
-  push:
-    branches:
-      - 'feature/**'
+  workflow_run:
+    workflows:
+      - Dev Lint
+    types:
+      - completed
 
 jobs:
-  lint:
+  build:
     runs-on: self-hosted
-
+    if: contains(fromJson('["success","neutral"]'), github.event.workflow_run.conclusion)
     steps:
       - uses: actions/checkout@v4
 
@@ -26,5 +28,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run linter
-        run: pnpm lint
+      - name: Run build
+        run: pnpm build:cicd

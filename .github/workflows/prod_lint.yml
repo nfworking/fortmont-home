@@ -1,9 +1,10 @@
-name: Dev Lint
+name: Prod Lint
 
 on:
   push:
     branches:
-      - 'feature/**'
+      - 'main'
+  
 
 jobs:
   lint:
@@ -21,7 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-         
+        
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
