@@ -85,7 +85,7 @@ export function NavUser() {
 
         <DropdownMenuItem
           className="gap-2 rounded-lg mx-1 cursor-pointer"
-          onClick={() => { window.location.href = "/platform/account" }}
+          onClick={() => { window.location.href = "/account" }}
         >
           <User className="size-4 text-muted-foreground" />
           Account

@@ -26,13 +26,14 @@ import {
 
 interface SidebarProps {
   userName: string
+  userAvatarUrl?: string
   activeFolder: FolderType
   unreadCount: number
   onFolderChange: (folder: FolderType) => void
   onCompose: () => void
 }
 
-export function Sidebar({ userName, activeFolder, unreadCount, onFolderChange, onCompose }: SidebarProps) {
+export function Sidebar({ userName, userAvatarUrl, activeFolder, unreadCount, onFolderChange, onCompose }: SidebarProps) {
   const userInitials = getInitials(userName)
 
   const FOLDER_NAV: { label: string; folder: FolderType; icon: React.ReactNode }[] = [
@@ -55,10 +56,8 @@ export function Sidebar({ userName, activeFolder, unreadCount, onFolderChange, o
   return (
     <aside className="w-56 flex-shrink-0 border-r border-border bg-muted/20 flex flex-col h-full overflow-hidden">
       <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-border/60">
-        <Avatar className="size-7">
-          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold border border-primary/20">
-            {userInitials}
-          </AvatarFallback>
+        <Avatar className="size-7" >
+          <img src={userAvatarUrl ?? ``} alt={userInitials } />
         </Avatar>
         <span className="flex-1 text-xs font-semibold text-foreground truncate">
           {userName}

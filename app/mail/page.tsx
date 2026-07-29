@@ -249,6 +249,7 @@ export default function MailClient() {
   }
 
   const userName = session.user.name || extractName(session.user.email || "")
+  const userAvatarUrl = session.user.image || undefined
   const selectedContact = selectedEmail ? getEmailContact(selectedEmail, activeFolder) : ""
   const selectedName = selectedEmail ? extractName(selectedContact) : ""
 
@@ -256,6 +257,7 @@ export default function MailClient() {
     <div className="flex h-screen bg-transparent text-foreground font-sans overflow-hidden">
       <Sidebar
         userName={userName}
+        userAvatarUrl={userAvatarUrl}
         activeFolder={activeFolder}
         unreadCount={unreadCount}
         onFolderChange={handleFolderChange}
