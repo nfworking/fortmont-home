@@ -11,7 +11,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 
 export type { NavItem }
@@ -20,7 +19,6 @@ export function NavMain({
   items,
 }: {
   items: NavItem[]
-
   isGithubLinked?: boolean
 }) {
   const pathname = usePathname()
@@ -73,18 +71,14 @@ export function NavMain({
                 group relative flex h-9 w-full items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors
                 ${
                   isActive
-                    ? "bg-[#1f1f1f] text-white font-semibold"
-                    : "text-[#a1a1a1] hover:bg-[#141414] hover:text-white"
+                    ? "bg-black-50 text-foreground dark:bg-white dark:text-black font-semibold"
+                    : "text-muted-foreground hover:bg-zinc-200/60 dark:hover:bg-zinc-800/50 hover:text-foreground"
                 }
               `}
             >
               <Link href={item.url} className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span
-                    className={`size-4 shrink-0 transition-colors ${
-                      isActive ? "text-white" : "text-[#888888] group-hover:text-white"
-                    }`}
-                  >
+                  <span className="size-4 shrink-0 ">
                     {item.icon}
                   </span>
                   <span className="truncate">{item.title}</span>
@@ -94,12 +88,12 @@ export function NavMain({
                   <span
                     className={`ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${
                       item.badgeVariant === "orange"
-                        ? "bg-[#000000] text-[#f59e0b]"
+                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                         : item.badgeVariant === "blue"
-                        ? "bg-[#000102] text-[#3b82f6]"
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : item.badgeVariant === "green"
-                        ? "bg-[#010408] text-[#34a905]"
-                        : ""
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {item.badge}
@@ -118,15 +112,15 @@ export function NavMain({
       <SidebarGroupContent className="flex flex-col gap-3">
         {/* Nested Header / Back Button if inside a section like Ticketing */}
         {nestedConfig && (
-          <div className="mb-1 flex flex-col gap-1 border-b border-[#1f1f1f] pb-2">
+          <div className="mb-1 flex flex-col gap-1 border-b border-sidebar-border pb-2">
             <Link
               href="/dashboard"
-              className="flex items-center gap-1.5 text-xs text-[#888888] hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-sidebar-foreground transition-colors"
             >
               <ArrowLeft className="size-3.5" />
               <span>Home</span>
             </Link>
-            <span className="text-sm font-semibold text-white px-0.5 pt-1">
+            <span className="text-sm font-semibold text-sidebar-foreground px-0.5 pt-1">
               {nestedConfig.parentTitle}
             </span>
           </div>
@@ -134,16 +128,16 @@ export function NavMain({
 
         {/* Search Input */}
         <div className="relative flex items-center">
-          <Search className="absolute left-2.5 size-4 text-[#666666]" />
+          <Search className="absolute left-2.5 size-4 text-muted-foreground" />
           <input
             ref={inputRef}
             type="text"
             placeholder="Find"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-full rounded-md border border-[#222222] bg-[#0a0a0a] pl-8 pr-7 text-xs text-white placeholder-[#666666] outline-none transition-colors focus:border-[#444444]"
+            className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-7 text-xs text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-ring"
           />
-          <kbd className="pointer-events-none absolute right-2 flex h-4 select-none items-center rounded border border-[#222222] bg-[#141414] px-1.5 font-mono text-[10px] text-[#666666]">
+          <kbd className="pointer-events-none absolute right-2 flex h-4 select-none items-center rounded border border-border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
             F
           </kbd>
         </div>
@@ -152,7 +146,7 @@ export function NavMain({
         {filteredItems.length > 0 ? (
           renderMenuList(filteredItems)
         ) : (
-          <p className="px-2 py-4 text-center text-xs text-[#666666]">
+          <p className="px-2 py-4 text-center text-xs text-muted-foreground">
             No results found.
           </p>
         )}

@@ -5,6 +5,7 @@ import { fetchAccount } from "@/lib/storage"; // Import fetchAccount
 import { SessionProvider } from "next-auth/react";
 import { TicketModalProvider } from "@/components/dashboard_res/ticket-modal-context";
 import { redirect } from "next/navigation";
+import { PageTransition } from "@/components/ui/page-transition";
 
 // Helper function to format bytes nicely (e.g. 1.2 GB)
 function formatBytes(bytes: number, decimals = 1) {
@@ -83,6 +84,7 @@ export default async function DashboardGroupLayout({
     <div className="relative min-h-screen w-full">
       <SessionProvider session={session}>
         <TicketModalProvider>
+          <PageTransition >
           <ApplicationShell1
             storageUsage={storageUsage} // Pass storage usage prop here
             user={
@@ -98,6 +100,7 @@ export default async function DashboardGroupLayout({
           >
             {children}
           </ApplicationShell1>
+          </PageTransition>
         </TicketModalProvider>
       </SessionProvider>
     </div>
