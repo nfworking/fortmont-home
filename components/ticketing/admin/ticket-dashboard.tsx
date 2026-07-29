@@ -366,7 +366,7 @@ export function TicketDashboard({ tickets = [], users: initialUsers = [] }: Tick
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/ticketing/post/ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        ...withBearerToken(undefined, session?.accessToken),
+          ...withBearerToken(undefined, session?.accessToken),
         body: JSON.stringify({
           type: form.type,
           department: form.department,

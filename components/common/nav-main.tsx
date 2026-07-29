@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Search, ArrowLeft } from "lucide-react"
-import { navigationConfig, type NavItem } from "@/lib/navigation"
+import { useNavigationConfig, type NavItem } from "@/lib/navigation"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -44,6 +44,7 @@ export function NavMain({
   }, [])
 
   // Check for active nested section (e.g. /admin_ticketing)
+  const navigationConfig = useNavigationConfig()
   const activeNestedKey = Object.keys(navigationConfig.nested || {}).find((prefix) =>
     pathname.startsWith(prefix)
   )
@@ -93,8 +94,12 @@ export function NavMain({
                   <span
                     className={`ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${
                       item.badgeVariant === "orange"
-                        ? "bg-[#38200d] text-[#f59e0b]"
-                        : "bg-[#0e2a47] text-[#3b82f6]"
+                        ? "bg-[#000000] text-[#f59e0b]"
+                        : item.badgeVariant === "blue"
+                        ? "bg-[#000102] text-[#3b82f6]"
+                        : item.badgeVariant === "green"
+                        ? "bg-[#010408] text-[#34a905]"
+                        : ""
                     }`}
                   >
                     {item.badge}
