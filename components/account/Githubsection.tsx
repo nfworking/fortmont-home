@@ -15,6 +15,12 @@ import { withBearerToken } from "@/lib/fetch-auth";
 
 interface GitHubSectionProps {
   githubLink: AccountGitHubLink[] | null | undefined;
+  callbackParams?: {
+    code?: string;
+    state?: string;
+    error?: string;
+    error_description?: string;
+  };
 }
 
 export function GitHubSection({ githubLink }: GitHubSectionProps) {
