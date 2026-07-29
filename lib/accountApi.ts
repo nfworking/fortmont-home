@@ -113,7 +113,7 @@ export function toAccountUser(apiUser: ApiUsersResponse): AccountUser {
   }
 }
 
-export async function fetchAccountUser(session: any): Promise<AccountUser | null> {
+export async function fetchAccountUser(session: { user?: { name?: string | null; email?: string | null }; accessToken?: string } | null): Promise<AccountUser | null> {
   if (!session?.user) return null
 
   const apiBase = process.env.NEXT_PUBLIC_API_HOST?.replace(/\/$/, "") ?? ""
