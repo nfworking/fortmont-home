@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { NavMain } from "@/components/common/nav-main"
-import { navigationConfig } from "@/lib/navigation"
+import { useNavigationConfig } from "@/lib/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -54,6 +54,7 @@ export function AppSidebar({ user, isGithubLinked = false, storageUsage, ...prop
  
   false
 
+  const navigationConfig = useNavigationConfig()
   const processedMainItems = navigationConfig.main.map((item) => {
     if (item.requiresGithub && !hasGithub) {
       return {
