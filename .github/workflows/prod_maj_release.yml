@@ -41,7 +41,7 @@ jobs:
       - name: Run build
         run: pnpm build:cicd
 
-      - name: Check major release eligibility
+      - name: Check if new version should be tagged
         id: version_gate
         uses: actions/github-script@v7
         with:
@@ -53,43 +53,37 @@ jobs:
               fs.readFileSync('package.json', 'utf8')
             ).version;
 
-            let previous = '';
+            let latest = '0.0.0';
 
             try {
-              const latestTag = cp.execSync(
+              latest = cp.execSync(
                 'git describe --tags --abbrev=0',
                 { encoding: 'utf8' }
-              ).trim();
-
-              previous = latestTag.replace(/^v/, '');
+              ).trim().replace(/^v/, '');
             } catch {
-              previous = '';
+              latest = '0.0.0';
             }
 
-            const semver = /^(\d+)\.(\d+)\.(\d+)$/;
+            function compare(a, b) {
+              const pa = a.split('.').map(Number);
+              const pb = b.split('.').map(Number);
 
-            const currentMatch = current.match(semver);
-            const previousMatch = previous.match(semver);
-
-            let shouldTag = false;
-
-            if (currentMatch) {
-              if (!previousMatch) {
-                shouldTag = true;
-              } else {
-                const currentMajor = Number(currentMatch[1]);
-                const previousMajor = Number(previousMatch[1]);
-
-                shouldTag = currentMajor > previousMajor;
+              for (let i = 0; i < 3; i++) {
+                if ((pa[i] || 0) > (pb[i] || 0)) return 1;
+                if ((pa[i] || 0) < (pb[i] || 0)) return -1;
               }
+
+              return 0;
             }
+
+            const shouldTag = compare(current, latest) > 0;
 
             core.setOutput('current', current);
             core.setOutput('should_tag', shouldTag ? 'true' : 'false');
 
-            core.info(`Current version: ${current}`);
-            core.info(`Latest release tag: ${previous || '(none)'}`);
-            core.info(`Major release: ${shouldTag}`);
+            core.info(`Package version : ${current}`);
+            core.info(`Latest tag      : ${latest}`);
+            core.info(`Create tag      : ${shouldTag}`);
 
       - name: Create and push tag
         if: steps.version_gate.outputs.should_tag == 'true'
@@ -110,22 +104,16 @@ jobs:
 
               core.info(`Tag ${tag} already exists. Skipping.`);
               return;
-
             } catch {
-              // Tag does not exist
+              // Tag doesn't exist
             }
 
-            cp.execSync(
-              'git config user.name "github-actions[bot]"'
-            );
-
-            cp.execSync(
-              'git config user.email "41898282+github-actions[bot]@users.noreply.github.com"'
-            );
+            cp.execSync('git config user.name "github-actions[bot]"');
+            cp.execSync('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"');
 
             cp.execSync(`git tag ${tag}`);
             cp.execSync(`git push origin ${tag}`, {
               stdio: 'inherit'
             });
 
-            core.info(`Created and pushed ${tag}`);
+            core.info(`Created ${tag}`);
