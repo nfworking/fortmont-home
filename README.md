@@ -1,12 +1,61 @@
 # 🏠 Fortmont Home
 
+## Better Auth Migration Proposal 30/07
+
+## Overview
+
+After reviewing the Better Auth documentation, it appears to be a much stronger authentication solution for the Fortmont ecosystem and future projects.
+
+## Why?
+
+Better Auth provides a comprehensive authentication framework with over **50+ official plugins**, making it a much better fit for our long-term goals than the current implementation.
+
+Some of the key benefits include:
+
+- Extensive plugin ecosystem with 50+ supported plugins
+- Built-in OAuth client support
+- Secure session management
+- Magic link authentication
+- Full two-factor authentication (2FA) support
+- Modern, actively maintained authentication framework
+- Better extensibility for future authentication methods and integrations
+
+Overall, Better Auth appears to provide a cleaner, more maintainable, and feature-rich authentication platform that aligns well with the direction of the Fortmont products.
+
+## Implementation Plan
+
+This proposal is currently in the **evaluation and planning** stage.
+
+When implementation begins, the **Fortmont API** will be migrated first. As the central authentication service for the Fortmont ecosystem, it is the logical starting point before updating any client applications.
+
+The planned migration includes:
+
+- Refactoring the existing authentication system to Better Auth.
+- Migrating from the current custom user schema to the default schema provided by Better Auth (with project-specific extensions where required).
+- Updating all Fortmont applications to authenticate through the new API once the migration has been completed.
+
+## Timeline
+
+There is currently **no planned release date** for this migration.
+
+A significant authentication refactor has already taken place recently, so this change will only be considered once the current implementation has matured.
+
+The current authentication system will remain in place through the **v2.x** release cycle. Should this migration proceed, it will be introduced in a future major release after sufficient planning and testing.
+
+If the Better Auth implementation proves to be unstable or unsuitable during development or testing, the project will continue using the existing authentication system until a suitable replacement strategy has been identified.
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ## 🚀 What is Fortmont Home?
 
 Fortmont Home is a modern, easy-to-use dashboard designed to help you monitor and manage your homelab while keeping you up to date with your infrastructure and organisation's services—all from one place.
 
 Whether you're managing a small home server or a larger environment, Fortmont Home aims to provide a clean, fast, and enjoyable experience.
 
----
+
 
 # ✨ Features
 
