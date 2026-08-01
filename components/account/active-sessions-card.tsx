@@ -223,14 +223,7 @@ export function ActiveSessionsCard({ currentSessionId }: ActiveSessionsCardProps
                         <span className="font-semibold text-sm text-foreground truncate">
                           {browser} on {os}
                         </span>
-                        {isThirdPartyConnection && (
-  <Badge
-    variant="default"
-    className="text-[10px] py-0 px-1.5 h-4 font-normal bg-primary/20 text-primary border-primary/20"
-  >
-    Third party connection
-  </Badge>
-)}
+                      
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                         <span>{session.ipAddress || "Unknown IP"}</span>
