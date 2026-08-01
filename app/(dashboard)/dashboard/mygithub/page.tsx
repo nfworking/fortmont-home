@@ -76,7 +76,7 @@ const LANG_COLORS: Record<string, string> = {
 
 async function proxyFetch<T>(path: string, accessToken?: string): Promise<T> {
   const res = await fetch(
-    `${process.env.API_HOST}/api/github/proxy/${path}`,
+    `${process.env.NEXT_PUBLIC_API_HOST}/api/github/proxy/${path}`,
     withBearerToken(undefined, accessToken),
   );
   if (!res.ok) throw new Error(`GitHub API error ${res.status}`);

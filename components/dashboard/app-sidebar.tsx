@@ -43,7 +43,7 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   }
 }
 
-export function AppSidebar({ user, isGithubLinked = false, storageUsage, ...props }: AppSidebarProps) {
+export function AppSidebar({ user, isGithubLinked, storageUsage, ...props }: AppSidebarProps) {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const pathname = usePathname()
   const isStorageSection = pathname.startsWith("/my-storage")

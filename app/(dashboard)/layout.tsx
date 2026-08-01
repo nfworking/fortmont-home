@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { TicketModalProvider } from "@/components/dashboard_res/ticket-modal-context";
 import { redirect } from "next/navigation";
 import { PageTransition } from "@/components/ui/page-transition";
+import { withBearerToken } from "@/lib/fetch-auth";
 
 // Helper function to format bytes nicely (e.g. 1.2 GB)
 function formatBytes(bytes: number, decimals = 1) {
@@ -15,6 +16,29 @@ function formatBytes(bytes: number, decimals = 1) {
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+type GitHubStatusResponse = {
+  linked?: boolean;
+};
+
+async function fetchGitHubStatus(accessToken?: string): Promise<boolean> {
+  const apiBase = process.env.NEXT_PUBLIC_API_HOST?.replace(/\/$/, "");
+  if (!apiBase) return false;
+
+  try {
+    const response = await fetch(`${apiBase}/api/github/status`, {
+      method: "GET",
+      cache: "no-store",
+      ...withBearerToken(undefined, accessToken),
+    });
+
+    if (!response.ok) return false;
+    const payload = (await response.json()) as GitHubStatusResponse;
+    return payload.linked === true;
+  } catch {
+    return false;
+  }
 }
 
 export default async function DashboardGroupLayout({
@@ -62,9 +86,10 @@ export default async function DashboardGroupLayout({
   // Fetch Storage account info safely
   const accessToken = (session as unknown as { accessToken?: string })?.accessToken;
   const storagePromise = fetchAccount(accessToken).catch(() => null);
+  const githubStatusPromise = fetchGitHubStatus(accessToken);
 
   // Run queries in parallel
-  const [user, account] = await Promise.all([userPromise, storagePromise]);
+  const [user, account, isGithubLinked] = await Promise.all([userPromise, storagePromise, githubStatusPromise]);
 
   // Calculate storage usage if account data exists
   let storageUsage = undefined;
@@ -93,9 +118,12 @@ export default async function DashboardGroupLayout({
                     name: user.name ?? session?.user?.name ?? null,
                     email: user.email ?? session?.user?.email ?? null,
                     avatar: user.image ?? sessionUser?.image ?? null,
-                    isGithubLinked: false,
+                    isGithubLinked,
                   }
-                : session?.user ?? null
+                : {
+                    ...(session?.user ?? null),
+                    isGithubLinked,
+                  }
             }
           >
             {children}

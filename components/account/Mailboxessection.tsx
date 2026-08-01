@@ -15,7 +15,7 @@ export function MailboxesSection({ mailboxes }: MailboxesSectionProps) {
     <SettingsSection
       tag="Integrations"
       title="Mailboxes"
-      description="Exchange 2019 mailboxes provisioned to your account. The primary mailbox receives system notifications."
+      description="Your chosen mailbox server provisions the mailbox and sets up the email address for your account. You can have multiple mailboxes, but only one can be primary."
     >
       <Card className="bg-background/35 backdrop-blur-md border-border/60">
         <CardContent className="pt-6 space-y-3">
@@ -44,7 +44,7 @@ export function MailboxesSection({ mailboxes }: MailboxesSectionProps) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{mailbox.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    {mailbox.provider} · {mailbox.isPrimary ? "Primary" : "Shared"}
+                    Mailcow · {mailbox.isPrimary ? "Primary" : "Shared"}
                   </p>
                 </div>
                 {mailbox.isPrimary && (
